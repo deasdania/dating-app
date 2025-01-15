@@ -8,13 +8,14 @@ import (
 	"github.com/deasdania/dating-app/storage/models"
 	ps "github.com/deasdania/dating-app/storage/postgresql"
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type Core struct {
 	log     *logrus.Entry
-	storage *ps.Storage
+	storage ps.IStore
 	td      time.Duration
 	secret  string
 }
@@ -22,7 +23,7 @@ type Core struct {
 const randomListgenerating = 10
 
 // NewCore will create new a Core object representation of ICore interface
-func NewCore(log *logrus.Entry, storage *ps.Storage, td time.Duration, secret string) *Core {
+func NewCore(log *logrus.Entry, storage ps.IStore, td time.Duration, secret string) *Core {
 	return &Core{
 		log:     log,
 		storage: storage,
@@ -74,7 +75,7 @@ func (c *Core) Login(ctx context.Context, input *models.User) (string, error) {
 
 	// Generate JWT
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": user.ID.String(), // Store the UUID as a string in the token
+		"id":  user.ID.String(), // Store the UUID as a string in the token
 		"exp": time.Now().Add(time.Hour * 24).Unix(),
 	})
 	tokenString, err := token.SignedString([]byte(c.secret))
@@ -83,4 +84,66 @@ func (c *Core) Login(ctx context.Context, input *models.User) (string, error) {
 		return "", err
 	}
 	return tokenString, nil
+}
+
+func (c *Core) GetProfile(ctx context.Context, userID *uuid.UUID) (*models.Profile, error) {
+	c.log.Info("starting get profile core")
+
+	users, err := c.storage.GetUsers(ctx, models.UserFilterByID(userID))
+	var user *models.User
+	if users != nil && len(users) > 0 {
+		user = users[0] // username is unique, so it should be only one for each
+	} else {
+		c.log.Error("User not found", err)
+		return nil, errors.New("not found")
+	}
+	profiles, err := c.storage.GetProfiles(ctx, models.ProfileFilterByUsername(user.Username))
+	var profile *models.Profile
+	if profiles != nil && len(profiles) > 0 {
+		profile = profiles[0] // username is unique, so it should be only one for each
+	} else {
+		c.log.Error("User not found", err)
+		return nil, errors.New("not found")
+	}
+
+	return profile, nil
+}
+
+func (c *Core) SetProfile(ctx context.Context, userID *uuid.UUID, req *models.Profile) (bool, error) {
+	c.log.Info("starting get profile core")
+
+	isNew := false
+	users, err := c.storage.GetUsers(ctx, models.UserFilterByID(userID))
+	var user *models.User
+	if users != nil && len(users) > 0 {
+		user = users[0] // username is unique, so it should be only one for each
+	} else {
+		c.log.Error("User not found", err)
+		return isNew, errors.New("not found")
+	}
+	profiles, err := c.storage.GetProfiles(ctx, models.ProfileFilterByUsername(user.Username))
+	var profile *models.Profile
+	if profiles != nil && len(profiles) > 0 {
+		profile = profiles[0] // username is unique, so it should be only one for each
+		if req.ImageURL == "" {
+			req.ImageURL = profile.ImageURL
+		}
+		if err := c.storage.UpdateProfilePartial(ctx, &models.Profile{
+			ID:          profile.ID,
+			Description: req.Description,
+			ImageURL:    req.ImageURL,
+		}); err != nil {
+			c.log.Error("Failed update profile", err)
+			return isNew, errors.New("failed update profile")
+		}
+	} else {
+		req.Username = user.Username
+		isNew = true
+		if _, err := c.storage.CreateProfile(ctx, req); err != nil {
+			c.log.Error("Failed create profile", err)
+			return isNew, errors.New("failed create profile")
+		}
+	}
+
+	return isNew, nil
 }

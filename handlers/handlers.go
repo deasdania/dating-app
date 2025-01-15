@@ -14,36 +14,11 @@ import (
 	"github.com/deasdania/dating-app/storage/models"
 	ps "github.com/deasdania/dating-app/storage/postgresql"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
-
-// type Handlers struct {
-// 	App      *echo.Echo
-// 	Log      *logrus.Entry
-// 	Validate *validator.Validate
-// }
-
-// type middlewareManager struct {
-// 	jwtAuthM config.JWTAuthMiddleware
-// }
-
-// func NewHandlers(e *echo.Echo, mm *middlewareManager, timeoutContext time.Duration) *Handlers {
-
-// 	data, err := json.MarshalIndent(e.Routes(), "", "  ")
-// 	if err == nil {
-// 		os.WriteFile("routes.json", data, 0o644)
-// 	}
-// 	return &Handlers{}
-// }
-
-// func (h *Handlers) signUp(c *gin.Context)          {}
-// func (h *Handlers) login(c *gin.Context)           {}
-// func (h *Handlers) getProfile(c *gin.Context)      {}
-// func (h *Handlers) swipe(c *gin.Context)           {}
-// func (h *Handlers) purchasePremium(c *gin.Context) {}
-// func (h *Handlers) updateProfile(c *gin.Context)   {}
 
 type Handlers struct {
 	app      *echo.Echo
@@ -51,19 +26,23 @@ type Handlers struct {
 	validate *validator.Validate
 	config   *viper.Viper
 	core     CoreI
+	secret   string
 }
 
 func NewHandlers(
-	app *echo.Echo, log *logrus.Entry, v1GroupNoAuth *echo.Group, v1GroupAuth *echo.Group, validate *validator.Validate, config *viper.Viper, core CoreI) {
+	app *echo.Echo, log *logrus.Entry, secret string, v1GroupNoAuth *echo.Group, v1GroupAuth *echo.Group, validate *validator.Validate, config *viper.Viper, core CoreI) {
 	handler := &Handlers{
 		app:      app,
 		log:      log,
 		validate: validate,
 		config:   config,
 		core:     core,
+		secret:   secret,
 	}
 	v1GroupNoAuth.POST("/signup", handler.SignUp)
 	v1GroupNoAuth.POST("/login", handler.Login)
+	v1GroupAuth.POST("/profile", handler.SetProfile)
+	v1GroupAuth.GET("/profile", handler.GetProfile)
 
 }
 
@@ -82,13 +61,16 @@ type middlewareManager struct {
 type CoreI interface {
 	SignUp(ctx context.Context, user *models.User) error
 	Login(ctx context.Context, input *models.User) (string, error)
+	GetProfile(ctx context.Context, userID *uuid.UUID) (*models.Profile, error)
+	SetProfile(ctx context.Context, userID *uuid.UUID, profile *models.Profile) (bool, error)
 }
 
 func (b *API) v1(e *echo.Echo, um *core.Core, mm *middlewareManager) {
 	v1Group := e.Group("/v1", mm.jwtAuthM.JWTAuthMiddleware())
 	v1GroupNoAuth := e.Group("/v1")
+	secret := b.Config.GetString("access_token.secret")
 
-	NewHandlers(b.App, b.Log, v1GroupNoAuth, v1Group, b.Validate, b.Config, um)
+	NewHandlers(b.App, b.Log, secret, v1GroupNoAuth, v1Group, b.Validate, b.Config, um)
 
 	data, err := json.MarshalIndent(e.Routes(), "", "  ")
 	if err == nil {

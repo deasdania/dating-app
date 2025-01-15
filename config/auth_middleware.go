@@ -69,11 +69,7 @@ func (m *BasicAuthMiddleware) BasicAuthMiddleware() echo.MiddlewareFunc {
 	})
 }
 
-func InitBasicAuthMiddleware(credentials string) *BasicAuthMiddleware {
-	return &BasicAuthMiddleware{Credentials: credentials}
-}
-
-func ExtractIDFromToken(requestToken string, secret string) (string, error) {
+func ExtractClaimFromToken(requestToken string, secret string, claimKey string) (string, error) {
 	token, err := jwt.Parse(requestToken, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
@@ -85,12 +81,24 @@ func ExtractIDFromToken(requestToken string, secret string) (string, error) {
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
-
-	if !ok && !token.Valid {
+	if !ok || !token.Valid {
 		return "", fmt.Errorf("Invalid Token")
 	}
 
-	return claims["sub"].(string), nil
+	claimValue, ok := claims[claimKey].(string)
+	if !ok {
+		return "", fmt.Errorf("Claim %s not found or not a string", claimKey)
+	}
+
+	return claimValue, nil
+}
+
+func ExtractIDFromToken(requestToken string, secret string) (string, error) {
+	return ExtractClaimFromToken(requestToken, secret, "id")
+}
+
+func InitBasicAuthMiddleware(credentials string) *BasicAuthMiddleware {
+	return &BasicAuthMiddleware{Credentials: credentials}
 }
 
 func IsAuthorized(requestToken string, secret string) (bool, error) {

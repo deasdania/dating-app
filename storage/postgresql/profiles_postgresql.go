@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/deasdania/dating-app/storage/models"
 
@@ -143,4 +144,49 @@ func buildProfileFilter(filter *models.ProfileFilter) (string, map[string]interf
 	}
 
 	return query, params
+}
+
+func (s *Storage) UpdateProfilePartial(ctx context.Context, profile *models.Profile) error {
+	updateParts := []string{}
+	params := make(map[string]interface{})
+
+	// Dynamically add fields to update
+	if profile.Description != "" {
+		updateParts = append(updateParts, "description = :description")
+		params["description"] = profile.Description
+	}
+	if profile.ImageURL != "" {
+		updateParts = append(updateParts, "image_url = :image_url")
+		params["image_url"] = profile.ImageURL
+	}
+
+	// Ensure at least one field to update is provided
+	if len(updateParts) == 0 {
+		return fmt.Errorf("no fields to update")
+	}
+
+	// Combine parts into the final query
+	updateQuery := fmt.Sprintf(`
+		UPDATE profiles
+		SET %s
+		WHERE id = :id
+	`, strings.Join(updateParts, ", "))
+
+	// Add the profile ID to parameters
+	params["id"] = profile.ID
+
+	// Prepare the statement
+	stmt, err := s.db.PrepareNamedContext(ctx, updateQuery)
+	if err != nil {
+		return fmt.Errorf("preparing named query for partial updateProfile: %w", err)
+	}
+	defer stmt.Close()
+
+	// Execute the query
+	_, err = stmt.ExecContext(ctx, params)
+	if err != nil {
+		return fmt.Errorf("executing partial update query: %w", err)
+	}
+
+	return nil
 }
