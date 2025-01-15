@@ -190,3 +190,86 @@ func (s *Storage) UpdateProfilePartial(ctx context.Context, profile *models.Prof
 
 	return nil
 }
+
+// only for not premium member
+func (s *Storage) GetAvailableProfilesForSwiping(ctx context.Context, userID *uuid.UUID, targetDate string) ([]*models.Profile, error) {
+	// First, count how many swipes the user has already made today (like + pass)
+	countQuery := `
+		SELECT COUNT(*)
+		FROM swipes
+		WHERE user_id = :user_id
+		  AND created_at::date = :target_date::date;
+	`
+
+	var currentSwipeCount int
+	params := map[string]interface{}{
+		"user_id":     userID,
+		"target_date": targetDate, // Use string formatted as 'YYYY-MM-DD'
+	}
+
+	err := s.db.GetContext(ctx, &currentSwipeCount, countQuery, params)
+	if err != nil {
+		return nil, fmt.Errorf("counting swipes: %w", err)
+	}
+
+	// Limit the number of remaining swipes (user can only swipe 10 profiles per day)
+	remainingSwipes := 10 - currentSwipeCount
+	if remainingSwipes <= 0 {
+		// If no swipes are left, return an empty slice
+		return []*models.Profile{}, nil
+	}
+
+	// Now get the profiles excluding already swiped ones
+	profilesQuery := `
+		SELECT *
+		FROM profiles
+		WHERE id NOT IN (
+			SELECT profile_id
+			FROM swipes
+			WHERE user_id = :user_id
+			  AND created_at::date = :target_date::date
+		)
+		  AND id != :user_id
+		LIMIT :remaining_swipes;
+	`
+
+	// Prepare the parameters for the second query
+	params["remaining_swipes"] = remainingSwipes
+
+	// Query the database
+	stmt, err := s.db.PrepareNamedContext(ctx, profilesQuery)
+	if err != nil {
+		return nil, fmt.Errorf("preparing query: %w", err)
+	}
+	defer stmt.Close()
+
+	// Get profiles from the database
+	rows, err := stmt.QueryContext(ctx, params)
+	if err != nil {
+		return nil, fmt.Errorf("querying profiles: %w", err)
+	}
+	defer rows.Close()
+
+	var profiles []*models.Profile
+	for rows.Next() {
+		var profile models.Profile
+		err := rows.Scan(
+			&profile.ID,
+			&profile.Username,
+			&profile.Description,
+			&profile.ImageURL,
+			&profile.CreatedAt,
+			&profile.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("scanning row: %w", err)
+		}
+		profiles = append(profiles, &profile)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
+	}
+
+	return profiles, nil
+}

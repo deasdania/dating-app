@@ -63,6 +63,7 @@ type CoreI interface {
 	Login(ctx context.Context, input *models.User) (string, error)
 	GetProfile(ctx context.Context, userID *uuid.UUID) (*models.Profile, error)
 	SetProfile(ctx context.Context, userID *uuid.UUID, profile *models.Profile) (bool, error)
+	GetPeopleProfiles(ctx context.Context) ([]*models.Profile, error)
 }
 
 func (b *API) v1(e *echo.Echo, um *core.Core, mm *middlewareManager) {

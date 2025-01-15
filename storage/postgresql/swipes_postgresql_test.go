@@ -11,7 +11,7 @@ import (
 	"github.com/deasdania/dating-app/storage/models"
 )
 
-func TestStorage_CreateSwipe(t *testing.T) {
+func TestStorage_Swipe(t *testing.T) {
 	envTest(t)
 	s, tearDownFn := newTestStorage(t)
 	t.Cleanup(tearDownFn)

@@ -11,7 +11,7 @@ import (
 	"github.com/deasdania/dating-app/storage/models"
 )
 
-func TestStorage_CreateUser(t *testing.T) {
+func TestStorage_User(t *testing.T) {
 	envTest(t)
 	s, tearDownFn := newTestStorage(t)
 	t.Cleanup(tearDownFn)

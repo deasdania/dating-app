@@ -147,3 +147,12 @@ func (c *Core) SetProfile(ctx context.Context, userID *uuid.UUID, req *models.Pr
 
 	return isNew, nil
 }
+
+func (c *Core) GetPeopleProfiles(ctx context.Context) ([]*models.Profile, error) {
+	c.log.Info("starting get people profiles core")
+
+	//	profiles, err := c.storage.GetProfiles(ctx)
+	//
+	// return
+	return nil, nil
+}
