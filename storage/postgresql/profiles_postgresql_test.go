@@ -20,7 +20,7 @@ func TestStorage_CreateProfile(t *testing.T) {
 	// Prepare test data
 	profileID := uuid.New()
 	testData := &models.Profile{
-		ID:          &profileID,
+		ID:          profileID,
 		Username:    "testprofile",
 		Description: "This is a test profile",
 		ImageURL:    "https://example.com/image.jpg",

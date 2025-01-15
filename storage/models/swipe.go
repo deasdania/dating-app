@@ -7,7 +7,7 @@ import (
 )
 
 type Swipe struct {
-	ID        *uuid.UUID `json:"id" db:"id"`
+	ID        uuid.UUID  `json:"id" db:"id"`
 	UserID    *uuid.UUID `json:"user_id" db:"user_id"`
 	ProfileID *uuid.UUID `json:"profile_id" db:"profile_id"`
 	Direction string     `json:"direction" db:"direction"`

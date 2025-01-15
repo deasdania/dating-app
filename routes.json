@@ -1,0 +1,17 @@
+[
+  {
+    "method": "echo_route_not_found",
+    "path": "/v1",
+    "name": "github.com/labstack/echo/v4.init.func1"
+  },
+  {
+    "method": "echo_route_not_found",
+    "path": "/v1/*",
+    "name": "github.com/labstack/echo/v4.init.func1"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/signup",
+    "name": "github.com/deasdania/dating-app/handlers.(*Handlers).SignUp-fm"
+  }
+]

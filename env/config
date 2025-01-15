@@ -15,7 +15,7 @@ connectionTimeout="5"
 timeout="5"
 
 [access_token]
-secret=""
+secret="4f8369c632ca017a53705139f52804f0102e767768617832eb77ff07206c5901"
 
 [server]
 logLevel="fromenv"

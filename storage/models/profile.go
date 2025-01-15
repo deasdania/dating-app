@@ -7,12 +7,12 @@ import (
 )
 
 type Profile struct {
-	ID          *uuid.UUID `json:"id" db:"id"`
-	Username    string     `json:"username" db:"username"`
-	Description string     `json:"description" db:"description"`
-	ImageURL    string     `json:"image_url" db:"image_url"`
-	CreatedAt   time.Time  `json:"created_at" db:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at" db:"updated_at"`
+	ID          uuid.UUID `json:"id" db:"id"`
+	Username    string    `json:"username" db:"username"`
+	Description string    `json:"description" db:"description"`
+	ImageURL    string    `json:"image_url" db:"image_url"`
+	CreatedAt   time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
 }
 
 type ProfileFilter struct {
