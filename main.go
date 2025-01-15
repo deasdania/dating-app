@@ -124,16 +124,6 @@ func runServer() {
 	}
 	logger.Info("Store initialized successfully.")
 
-	// timeoutContext := time.Duration(config.GetInt("context.timeout")) * time.Second
-	// coreAPI := core.NewCore(
-	// 	logger,
-	// 	store,
-	// 	timeoutContext,
-	// )
-	// logger.Info("Core API initialized.")
-
-	logger.Info("JWT Auth middleware initialized.")
-
 	handlers.Bootstrap(&handlers.API{
 		App:      e,
 		Log:      logger,

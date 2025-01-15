@@ -90,7 +90,7 @@ func ExtractIDFromToken(requestToken string, secret string) (string, error) {
 		return "", fmt.Errorf("Invalid Token")
 	}
 
-	return claims["id"].(string), nil
+	return claims["sub"].(string), nil
 }
 
 func IsAuthorized(requestToken string, secret string) (bool, error) {

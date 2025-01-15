@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/deasdania/dating-app/config"
 	"github.com/deasdania/dating-app/core"
+	"github.com/deasdania/dating-app/storage/models"
 	ps "github.com/deasdania/dating-app/storage/postgresql"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
@@ -48,11 +50,11 @@ type Handlers struct {
 	log      *logrus.Entry
 	validate *validator.Validate
 	config   *viper.Viper
-	core     *core.Core
+	core     CoreI
 }
 
 func NewHandlers(
-	app *echo.Echo, log *logrus.Entry, v1GroupNoAuth *echo.Group, v1GroupAuth *echo.Group, validate *validator.Validate, config *viper.Viper, core *core.Core) {
+	app *echo.Echo, log *logrus.Entry, v1GroupNoAuth *echo.Group, v1GroupAuth *echo.Group, validate *validator.Validate, config *viper.Viper, core CoreI) {
 	handler := &Handlers{
 		app:      app,
 		log:      log,
@@ -61,6 +63,7 @@ func NewHandlers(
 		core:     core,
 	}
 	v1GroupNoAuth.POST("/signup", handler.SignUp)
+	v1GroupNoAuth.POST("/login", handler.Login)
 
 }
 
@@ -74,6 +77,11 @@ type API struct {
 
 type middlewareManager struct {
 	jwtAuthM config.JWTAuthMiddleware
+}
+
+type CoreI interface {
+	SignUp(ctx context.Context, user *models.User) error
+	Login(ctx context.Context, input *models.User) (string, error)
 }
 
 func (b *API) v1(e *echo.Echo, um *core.Core, mm *middlewareManager) {
@@ -90,11 +98,14 @@ func (b *API) v1(e *echo.Echo, um *core.Core, mm *middlewareManager) {
 
 func Bootstrap(api *API) {
 	timeoutContext := time.Duration(api.Config.GetInt("context.timeout")) * time.Second
+	secret := api.Config.GetString("access_token.secret")
 	coreAPI := core.NewCore(
 		api.Log,
 		api.Storage,
 		timeoutContext,
+		secret,
 	)
+
 	jwtAuthMiddleware := config.InitJWTAuthMiddleware(api.Config.GetString("access_token.secret"))
 
 	mm := &middlewareManager{
