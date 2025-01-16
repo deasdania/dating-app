@@ -13,4 +13,5 @@ type IWriterStore interface {
 	GetProfiles(ctx context.Context, opts ...models.ProfileFilterOption) ([]*models.Profile, error)
 	GetSwipes(ctx context.Context, opts ...models.SwipeFilterOption) ([]*models.Swipe, []*uuid.UUID, error)
 	GetUsers(ctx context.Context, opts ...models.UserFilterOption) ([]*models.User, error)
+	GetPremiumPackages(ctx context.Context, opts ...models.PremiumPackageFilterOption) ([]*models.PremiumPackage, error)
 }

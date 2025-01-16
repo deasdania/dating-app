@@ -9,9 +9,9 @@ CREATE TABLE users (
     password TEXT NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     is_premium BOOLEAN DEFAULT FALSE,
-    verified BOOLEAN DEFAULT FALSE,
-    daily_swipe_count INTEGER DEFAULT 0
+    verified BOOLEAN DEFAULT FALSE
 );
 
 -- +goose StatementEnd

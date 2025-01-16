@@ -18,9 +18,29 @@ func TestStorage_Profile(t *testing.T) {
 	ctx := context.Background()
 
 	// Prepare test data
+	userID := uuid.New()
+	testDataUser := &models.User{
+		ID:        userID,
+		Username:  "testuser",
+		Password:  "securepassword",
+		Email:     "testuser@example.com",
+		CreatedAt: time.Now(),
+		IsPremium: false,
+		Verified:  true,
+	}
+
+	// Create a new user
+	got, err := s.CreateUser(ctx, testDataUser)
+	if err != nil {
+		t.Errorf("Storage.CreateUser() error = %v", err)
+		return
+	}
+
+	// Prepare test data
 	profileID := uuid.New()
 	testData := &models.Profile{
 		ID:          profileID,
+		UserID:      testDataUser.ID,
 		Username:    "testprofile",
 		Description: "This is a test profile",
 		ImageURL:    "https://example.com/image.jpg",
@@ -29,7 +49,7 @@ func TestStorage_Profile(t *testing.T) {
 	}
 
 	// Create a new profile
-	got, err := s.CreateProfile(ctx, testData)
+	got, err = s.CreateProfile(ctx, testData)
 	if err != nil {
 		t.Errorf("Storage.CreateProfile() error = %v", err)
 		return

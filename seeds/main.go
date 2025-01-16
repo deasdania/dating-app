@@ -33,13 +33,11 @@ func main() {
 
 		isPremium := rand.Intn(2) == 1
 		isVerified := rand.Intn(2) == 1
-		dailySwipeCount := rand.Intn(11) // Random daily swipe count between 0 and 10
-
 		// Insert user into the "users" table
 		_, err = db.Exec(`
-			INSERT INTO users (id, username, email, password, is_premium, verified, daily_swipe_count)
-			VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-			uuid.New(), username, email, hashedPassword, isPremium, isVerified, dailySwipeCount)
+			INSERT INTO users (id, username, email, password, is_premium, verified)
+			VALUES ($1, $2, $3, $4, $5, $6)`,
+			uuid.New(), username, email, hashedPassword, isPremium, isVerified)
 
 		if err != nil {
 			log.Fatal(err)

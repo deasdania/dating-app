@@ -42,16 +42,21 @@ func NewHandlers(
 		core:     core,
 		secret:   secret,
 	}
-	v1GroupNoAuth.POST("/signup", handler.SignUp)
-	v1GroupNoAuth.POST("/login", handler.Login)
+	// Public routes - No authentication required
+	v1GroupNoAuth.POST("/signup", handler.SignUp) // Register a new user
+	v1GroupNoAuth.POST("/login", handler.Login)   // User login (authentication)
 
-	v1GroupAuth.POST("/profile", handler.SetProfile)
-	v1GroupAuth.GET("/profile", handler.GetProfile)
-	v1GroupAuth.GET("/profiles", handler.GetPeopleProfiles)
-	v1GroupAuth.GET("/profiles/:id", handler.GetPeopleProfileByID)
+	// Authenticated routes - Requires user to be logged in
+	v1GroupAuth.POST("/profile", handler.SetProfile)           // Update the user's profile information
+	v1GroupAuth.GET("/profile", handler.GetProfile)            // Retrieve the authenticated user's profile
+	v1GroupAuth.GET("/profiles", handler.GetAvailableProfiles) // Get a list of profiles for potential swiping
+	v1GroupAuth.GET("/profiles/:id", handler.GetProfileByID)   // View a specific user's profile by ID
 
-	v1GroupAuth.POST("/swipe", handler.Swipe)
-	v1GroupAuth.POST("/premium", handler.Premium)
+	// Swiping and interactions
+	v1GroupAuth.POST("/swipe", handler.Swipe) // Perform a swipe action (left or right) on a profile
+
+	// Premium features
+	v1GroupAuth.POST("/premium", handler.UpdatePremiumStatus) // Update premium features (e.g., verified label, remove swipe quota)
 
 }
 
@@ -69,16 +74,16 @@ type middlewareManager struct {
 }
 
 type CoreI interface {
-	SignUp(ctx context.Context, user *models.User) error
-	Login(ctx context.Context, input *models.User) (string, error)
+	SignUp(ctx context.Context, user *models.User) (status.DatingStatusCode, error)
+	Login(ctx context.Context, input *models.User) (status.DatingStatusCode, string, error)
 
-	GetProfile(ctx context.Context, userID *uuid.UUID) (*models.Profile, error)
-	SetProfile(ctx context.Context, userID *uuid.UUID, profile *models.Profile) error
-	GetPeopleProfiles(ctx context.Context, userID *uuid.UUID, page, limit uint) ([]*models.Profile, error)
-	GetPeopleProfileByID(ctx context.Context, profileID *uuid.UUID) (*models.Profile, error)
+	GetProfile(ctx context.Context, userID *uuid.UUID) (status.DatingStatusCode, *models.Profile, error)
+	SetProfile(ctx context.Context, userID *uuid.UUID, profile *models.Profile) (status.DatingStatusCode, error)
+	GetPeopleProfiles(ctx context.Context, userID *uuid.UUID, page, limit uint) (status.DatingStatusCode, []*models.Profile, error)
+	GetPeopleProfileByID(ctx context.Context, profileID *uuid.UUID) (status.DatingStatusCode, *models.Profile, error)
 
 	Swipe(ctx context.Context, req *models.Swipe) (status.DatingStatusCode, error)
-	SetPremium(ctx context.Context, userID *uuid.UUID, typeStr string) (status.DatingStatusCode, error)
+	SetPremium(ctx context.Context, userID *uuid.UUID, packageType models.PackageType) (status.DatingStatusCode, error)
 }
 
 func (b *API) v1(e *echo.Echo, um *core.Core, mm *middlewareManager) {

@@ -39,8 +39,8 @@ func (h *Handlers) SignUp(c echo.Context) error {
 
 	// Call core.SignUp to register the user
 	ctx := c.Request().Context()
-	if err := h.core.SignUp(ctx, &user); err != nil {
-		c.JSON(http.StatusInternalServerError, models.NewResponseError(http.StatusInternalServerError, status.SystemErrCode_Generic, err.Error()))
+	if status, err := h.core.SignUp(ctx, &user); err != nil {
+		c.JSON(http.StatusInternalServerError, models.NewResponseError(http.StatusInternalServerError, status, err.Error()))
 		return err
 	}
 
@@ -60,9 +60,9 @@ func (h *Handlers) Login(c echo.Context) error {
 
 	// Call core.Login to log the user in and get the token
 	ctx := c.Request().Context()
-	token, err := h.core.Login(ctx, &user)
+	status, token, err := h.core.Login(ctx, &user)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.NewResponseError(http.StatusInternalServerError, status.SystemErrCode_Generic, err.Error()))
+		c.JSON(http.StatusInternalServerError, models.NewResponseError(http.StatusInternalServerError, status, err.Error()))
 		return err
 	}
 

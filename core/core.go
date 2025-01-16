@@ -40,139 +40,25 @@ func NewCore(log *logrus.Entry, storage ps.IStore, cache *redis.RedisConnection,
 	}
 }
 
-func (c *Core) SignUp(ctx context.Context, user *models.User) error {
-	c.log.Info("starting signup core")
-
-	// Hash password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	if err != nil {
-		c.log.Error("Failed to generate hashed password", err)
-		return err
-	}
-
-	// Save user to database
-	user.Password = string(hashedPassword)
-	user_id, err := c.storage.CreateUser(ctx, user)
-	if err != nil {
-		c.log.Error("Failed to create user", err)
-		return err
-	}
-	c.log.Infof("New user added: %s", user_id)
-
-	return nil
-}
-
-func (c *Core) Login(ctx context.Context, input *models.User) (string, error) {
-	c.log.Info("Starting login core")
-
-	user, err := c.getUserByUsername(ctx, input.Username)
-	if err != nil {
-		c.log.Error("Failed to get user by username", err)
-		return "", err
-	}
-
-	// Check password
-	err = c.checkPassword(user.Password, input.Password)
-	if err != nil {
-		c.log.Error("Failed to compare passwords", err)
-		return "", err
-	}
-
-	// Generate JWT token
-	tokenString, err := c.generateJWTToken(user.ID.String())
-	if err != nil {
-		c.log.Error("Failed to generate JWT token", err)
-		return "", err
-	}
-
-	return tokenString, nil
-}
-
-func (c *Core) GetProfile(ctx context.Context, userID *uuid.UUID) (*models.Profile, error) {
-	c.log.Info("Starting get profile core")
-
-	profile, err := c.getProfileByUserID(ctx, userID)
-	if err != nil {
-		c.log.Error("Failed to retrieve profile", err)
-		return nil, err
-	}
-
-	return profile, nil
-}
-
-func (c *Core) SetProfile(ctx context.Context, userID *uuid.UUID, req *models.Profile) error {
-	c.log.Info("Starting set profile core")
-
-	profile, err := c.getProfileByUserID(ctx, userID)
-	if err != nil {
-		c.log.Error("Failed to retrieve existing profile", err)
-		return err
-	}
-
-	if req.ImageURL == "" {
-		req.ImageURL = profile.ImageURL
-	}
-
-	if err := c.storage.UpdateProfilePartial(ctx, &models.Profile{
-		ID:          profile.ID,
-		Description: req.Description,
-		ImageURL:    req.ImageURL,
-	}); err != nil {
-		c.log.Error("Failed to update profile in database", err)
-		return errors.New("failed to update profile")
-	}
-
-	return nil
-}
-
-func (c *Core) GetPeopleProfiles(ctx context.Context, userID *uuid.UUID, page, limit uint) ([]*models.Profile, error) {
-	c.log.Info("Starting get people profiles core")
-
-	date := time.Now().Format("2006-01-02")
-
-	profile, err := c.getProfileByUserID(ctx, userID)
-	if err != nil {
-		c.log.Error("Failed to retrieve profile for user", err)
-		return nil, err
-	}
-
-	// Get profiles already swiped by the user
-	_, swipeProfileIDs, err := c.storage.GetSwipes(ctx, models.SwipeFilterByUserID(userID), models.SwipeFilterByCreatedAtDate(date))
-	if err != nil {
-		c.log.Error("Failed to retrieve swipes", err)
-		return nil, errors.New("failed to get swipes")
-	}
-
-	// Get profiles excluding the user and the swiped profiles
-	profiles, err := c.storage.GetProfiles(
-		ctx,
-		models.ProfileFilterByPage(page),
-		models.ProfileFilterByLimit(limit),
-		models.ProfileFilterByExcludeProfileIDs(append([]*uuid.UUID{&profile.ID}, swipeProfileIDs...)),
-	)
-	if err != nil {
-		c.log.Error("Failed to retrieve profiles from database", err)
-		return nil, errors.New("failed to get profiles")
-	}
-
-	return profiles, nil
-}
-
-func (c *Core) GetPeopleProfileByID(ctx context.Context, profileID *uuid.UUID) (*models.Profile, error) {
-	c.log.Info("Starting get profile by ID core")
-
-	profile, err := c.getProfileByID(ctx, profileID)
-	if err != nil {
-		c.log.Error("Failed to retrieve profile by ID", err)
-		return nil, err
-	}
-
-	return profile, nil
-}
-
 func (c *Core) Swipe(ctx context.Context, req *models.Swipe) (status.DatingStatusCode, error) {
 	c.log.Info("Starting swipe core")
 	return c.processSwipe(ctx, req)
+}
+
+// Helper function to retrieve user by username
+func (c *Core) getUserByID(ctx context.Context, userID *uuid.UUID) (*models.User, error) {
+	users, err := c.storage.GetUsers(ctx, models.UserFilterByID(userID))
+	if err != nil {
+		c.log.Error("Error fetching users from database", err)
+		return nil, errors.New("failed to retrieve users")
+	}
+
+	if len(users) == 0 {
+		c.log.Error("User not found in the database", nil)
+		return nil, errors.New("user not found")
+	}
+
+	return users[0], nil
 }
 
 // Helper function to retrieve user by username
@@ -196,7 +82,7 @@ func (c *Core) checkPassword(hashedPassword, password string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	if err != nil {
 		c.log.Error("Password comparison failed", err)
-		return err
+		return fmt.Errorf("Password comparison failed: %v", err)
 	}
 	return nil
 }
@@ -250,6 +136,12 @@ func (c *Core) getProfileByID(ctx context.Context, profileID *uuid.UUID) (*model
 
 // Helper function to process swipe
 func (c *Core) processSwipe(ctx context.Context, req *models.Swipe) (status.DatingStatusCode, error) {
+	user, err := c.getUserByID(ctx, req.UserID)
+	if err != nil {
+		c.log.Error("Failed to check user", err)
+		return status.SystemErrCode_FailedBrowseData, err
+	}
+
 	date := time.Now().Format("2006-01-02")
 	_, ids, err := c.storage.GetSwipes(ctx, models.SwipeFilterByCreatedAtDate(date), models.SwipeFilterByUserID(req.UserID), models.SwipeFilterByProfileID(req.ProfileID))
 	if len(ids) > 0 {
@@ -276,7 +168,7 @@ func (c *Core) processSwipe(ctx context.Context, req *models.Swipe) (status.Dati
 		return status.SystemErrCode_FailedParseSwipe, err
 	}
 
-	if swipesCount >= 10 {
+	if !user.IsPremium && swipesCount >= 10 {
 		c.log.Error("User has reached daily swipe limit", nil)
 		return status.UserErrCode_ReachDailyLimit, fmt.Errorf(string(status.UserErrCode_ReachDailyLimit))
 	}
@@ -309,11 +201,6 @@ func (c *Core) processSwipe(ctx context.Context, req *models.Swipe) (status.Dati
 		c.log.Error("Failed to store swipe record", err)
 		return status.SystemErrCode_FailedStoreData, err
 	}
-
-	return status.Success_Generic, nil
-}
-
-func (c *Core) SetPremium(ctx context.Context, userID *uuid.UUID, typeStr string) (status.DatingStatusCode, error) {
 
 	return status.Success_Generic, nil
 }

@@ -16,11 +16,21 @@ const (
 
 type PremiumPackage struct {
 	ID          uuid.UUID   `json:"id" db:"id"`                     // Unique ID for each premium package
-	UserID      uuid.UUID   `json:"user_id" db:"user_id"`           // User ID as a foreign key
+	UserID      *uuid.UUID  `json:"user_id" db:"user_id"`           // User ID as a foreign key
 	PackageType PackageType `json:"package_type" db:"package_type"` // Type of the premium package
 	ActiveUntil time.Time   `json:"active_until" db:"active_until"` // Date until the package is active
 	CreatedAt   time.Time   `json:"created_at" db:"created_at"`     // Timestamp for record creation
 	UpdatedAt   time.Time   `json:"updated_at" db:"updated_at"`     // Timestamp for record updates
+}
+
+func NewPremiumPackage() *PremiumPackage {
+	t := time.Now()
+	return &PremiumPackage{
+		ID:          uuid.New(),
+		CreatedAt:   t,
+		UpdatedAt:   t,
+		ActiveUntil: time.Now().Add(30 * 24 * time.Hour), // Active for 30 days for default
+	}
 }
 
 // Filter struct for querying `premium_packages`

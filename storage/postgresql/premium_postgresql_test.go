@@ -37,7 +37,7 @@ func TestStorage_PremiumPackage(t *testing.T) {
 	premiumPackageID := uuid.New()
 	testData := &models.PremiumPackage{
 		ID:          premiumPackageID,
-		UserID:      userID,                              // Use the valid userID from the user created above
+		UserID:      &userID,                             // Use the valid userID from the user created above
 		PackageType: models.VerifiedLabel,                // Example package type
 		ActiveUntil: time.Now().Add(30 * 24 * time.Hour), // Active for 30 days
 		CreatedAt:   time.Now(),
@@ -74,7 +74,7 @@ func TestStorage_PremiumPackage(t *testing.T) {
 
 	// Clean and add UserID filter
 	filters = []models.PremiumPackageFilterOption{}
-	filters = append(filters, models.PremiumPackageFilterByUserID(&testData.UserID))
+	filters = append(filters, models.PremiumPackageFilterByUserID(testData.UserID))
 	premiumPackages, err = s.GetPremiumPackages(ctx, filters...)
 	if err != nil {
 		t.Errorf("Storage.GetPremiumPackages() error = %v", err)

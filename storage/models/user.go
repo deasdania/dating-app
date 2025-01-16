@@ -7,14 +7,14 @@ import (
 )
 
 type User struct {
-	ID              uuid.UUID `json:"id" db:"id"`
-	Username        string    `json:"username" db:"username"`
-	Password        string    `json:"password" db:"password"`
-	Email           string    `json:"email" db:"email"`
-	CreatedAt       time.Time `json:"created_at" db:"created_at"`
-	IsPremium       bool      `json:"is_premium" db:"is_premium"`
-	Verified        bool      `json:"verified" db:"verified"`
-	DailySwipeCount int       `json:"daily_swipe_count" db:"daily_swipe_count"`
+	ID        uuid.UUID `json:"id" db:"id"`
+	Username  string    `json:"username" db:"username"`
+	Password  string    `json:"password" db:"password"`
+	Email     string    `json:"email" db:"email"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	IsPremium bool      `json:"is_premium" db:"is_premium"`
+	Verified  bool      `json:"verified" db:"verified"`
 }
 
 type UserFilter struct {

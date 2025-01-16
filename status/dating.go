@@ -24,6 +24,9 @@ const (
 	UserErrCode_ReachDailyLimit                 DatingStatusCode = "DAPPSXXX4008"
 	UserErrCode_AlreadySwiped                   DatingStatusCode = "DAPPSXXX4009"
 	UserErrCode_InvalidRequestPremiumPackage    DatingStatusCode = "DAPPSXXX4010"
+	UserErrCode_EmailIsTaken                    DatingStatusCode = "DAPPSXXX4011"
+	UserErrCode_UsernameIsTaken                 DatingStatusCode = "DAPPSXXX4012"
+	UserErrCode_UserNotFound                    DatingStatusCode = "DAPPSXXX40013"
 
 	SystemErrCode_Generic                       DatingStatusCode = "DAPPSXXX5000"
 	SystemErrCode_FailedReadMetadata            DatingStatusCode = "DAPPSXXX5002"
@@ -40,6 +43,10 @@ const (
 	SystemErrCode_FailedSwipeAddingProfile      DatingStatusCode = "DAPPSXXX5014"
 	SystemErrCode_FailedSwipeUpdatingSwipeCount DatingStatusCode = "DAPPSXXX5015"
 	SystemErrCode_FailedSwipeSettingExpire      DatingStatusCode = "DAPPSXXX5016"
+	SystemErrCode_FailedGenerateHashedPassword  DatingStatusCode = "DAPPSXXX5017"
+	SystemErrCode_FailedCreateUser              DatingStatusCode = "DAPPSXXX5018"
+	SystemErrCode_FailedCompareHashPassword     DatingStatusCode = "DAPPSXXX5019"
+	SystemErrCode_FailedGenerateJWTToken        DatingStatusCode = "DAPPSXXX5020"
 )
 
 var datingMap = map[DatingStatusCode]StatusResponse{
@@ -59,23 +66,28 @@ var datingMap = map[DatingStatusCode]StatusResponse{
 	UserErrCode_AlreadySwiped:                   {StatusDesc: "profile already swipped today"},
 	UserErrCode_ReachDailyLimit:                 {StatusDesc: "you have reached your daily swipe limit."},
 	UserErrCode_InvalidRequestPremiumPackage:    {StatusDesc: "type is required ('remove_quota' or 'verified_label')"},
+	UserErrCode_EmailIsTaken:                    {StatusDesc: "email is already taken"},
+	UserErrCode_UsernameIsTaken:                 {StatusDesc: "username is already taken"},
+	UserErrCode_UserNotFound:                    {StatusDesc: "user is not found"},
 
 	// 5XXX - system errors
-	SystemErrCode_Generic:                 {StatusDesc: "generic system error"},
-	SystemErrCode_FailedReadMetadata:      {StatusDesc: "could not read metadata from context"},
-	SystemErrCode_FailedReadOrgID:         {StatusDesc: "could not read organization ID from metadata"},
-	SystemErrCode_FailedSanitize:          {StatusDesc: "failed to sanitize parameters"},
-	SystemErrCode_FailedStoreData:         {StatusDesc: "failed to store data"},
-	SystemErrCode_FailedBrowseData:        {StatusDesc: "failed to browse data"},
-	SystemErrCode_FailedStartTransaction:  {StatusDesc: "failed to start data the transaction"},
-	SystemErrCode_FailedEndTransaction:    {StatusDesc: "failed to end data the transaction"},
-	SystemErrCode_FailedCommitTransaction: {StatusDesc: "failed to commit the transaction"},
-
-	SystemErrCode_FailedSwipeTracking: {StatusDesc: "error initializing swipe tracking: %v"},
-	SystemErrCode_FailedSwipeCount:    {StatusDesc: "error counting swipes: %v"},
-	SystemErrCode_FailedParseSwipe:    {StatusDesc: "error parsing swipes count: %v"},
-
+	SystemErrCode_Generic:                       {StatusDesc: "generic system error"},
+	SystemErrCode_FailedReadMetadata:            {StatusDesc: "could not read metadata from context"},
+	SystemErrCode_FailedReadOrgID:               {StatusDesc: "could not read organization ID from metadata"},
+	SystemErrCode_FailedSanitize:                {StatusDesc: "failed to sanitize parameters"},
+	SystemErrCode_FailedStoreData:               {StatusDesc: "failed to store data"},
+	SystemErrCode_FailedBrowseData:              {StatusDesc: "failed to browse data"},
+	SystemErrCode_FailedStartTransaction:        {StatusDesc: "failed to start data the transaction"},
+	SystemErrCode_FailedEndTransaction:          {StatusDesc: "failed to end data the transaction"},
+	SystemErrCode_FailedCommitTransaction:       {StatusDesc: "failed to commit the transaction"},
+	SystemErrCode_FailedSwipeTracking:           {StatusDesc: "error initializing swipe tracking: %v"},
+	SystemErrCode_FailedSwipeCount:              {StatusDesc: "error counting swipes: %v"},
+	SystemErrCode_FailedParseSwipe:              {StatusDesc: "error parsing swipes count: %v"},
 	SystemErrCode_FailedSwipeAddingProfile:      {StatusDesc: "error adding profile to swiped set: %v"},
 	SystemErrCode_FailedSwipeUpdatingSwipeCount: {StatusDesc: "error updating swipe count: %v"},
 	SystemErrCode_FailedSwipeSettingExpire:      {StatusDesc: "error setting expiration for swipes key: %v"},
+	SystemErrCode_FailedGenerateHashedPassword:  {StatusCode: "Failed generate hashed password"},
+	SystemErrCode_FailedCreateUser:              {StatusCode: "Failed create a user"},
+	SystemErrCode_FailedCompareHashPassword:     {StatusCode: "Failed compare hashed password"},
+	SystemErrCode_FailedGenerateJWTToken:        {StatusCode: "Failed generate jwt token"},
 }

@@ -20,8 +20,7 @@ const (
 			email,
 			created_at,
 			is_premium,
-			verified,
-			daily_swipe_count
+			verified
 		) VALUES (
 			:id,
 			:username,
@@ -29,8 +28,7 @@ const (
 			:email,
 			:created_at,
 			:is_premium,
-			:verified,
-			:daily_swipe_count
+			:verified
 		) RETURNING id
 	`
 
@@ -42,19 +40,31 @@ const (
 			email,
 			created_at,
 			is_premium,
-			verified,
-			daily_swipe_count
+			verified
 		FROM 
 			users
 	`
 
+	// User Update Query
+	updateUserQuery = `
+		UPDATE users
+		SET
+			username = COALESCE(:username, username),
+			password = COALESCE(:password, password),
+			email = COALESCE(:email, email),
+			is_premium = COALESCE(:is_premium, is_premium),
+			verified = COALESCE(:verified, verified),
+			updated_at = COALESCE(:updated_at, updated_at)
+		WHERE id = :id
+		RETURNING id
+	`
+
 	// User Filter Clauses
-	userIDClause          = ` id = :id`
-	usernameClause        = ` username = :username`
-	emailClause           = ` email = :email`
-	isPremiumClause       = ` is_premium = :is_premium`
-	verifiedClause        = ` verified = :verified`
-	dailySwipeCountClause = ` daily_swipe_count = :daily_swipe_count`
+	userIDClause    = ` id = :id`
+	usernameClause  = ` username = :username`
+	emailClause     = ` email = :email`
+	isPremiumClause = ` is_premium = :is_premium`
+	verifiedClause  = ` verified = :verified`
 )
 
 func (s *Storage) CreateUser(ctx context.Context, user *models.User) (*uuid.UUID, error) {
@@ -111,7 +121,6 @@ func (s *Storage) GetUsers(ctx context.Context, opts ...models.UserFilterOption)
 			&user.CreatedAt,
 			&user.IsPremium,
 			&user.Verified,
-			&user.DailySwipeCount,
 		)
 		if err != nil {
 			return nil, err
@@ -150,10 +159,41 @@ func buildUserFilter(filter *models.UserFilter) (string, map[string]interface{})
 		query = addQueryString(query, verifiedClause)
 		params["verified"] = filter.Verified
 	}
-	if filter.DailySwipeCount != nil && *filter.DailySwipeCount != 0 {
-		query = addQueryString(query, dailySwipeCountClause)
-		params["daily_swipe_count"] = filter.DailySwipeCount
+	return query, params
+}
+
+func (s *Storage) UpdateUser(ctx context.Context, user *models.User) error {
+	// Prepare the statement for updating user details
+	stmt, err := s.db.PrepareNamedContext(ctx, updateUserQuery)
+	if err != nil {
+		return fmt.Errorf("preparing named query for UpdateUser: %w", err)
+	}
+	defer stmt.Close()
+
+	// Create a map of the user fields
+	params := map[string]interface{}{
+		"id":         user.ID,
+		"username":   user.Username,
+		"password":   user.Password,
+		"email":      user.Email,
+		"is_premium": user.IsPremium,
+		"verified":   user.Verified,
+		"updated_at": user.UpdatedAt,
 	}
 
-	return query, params
+	// Execute the update query
+	var updatedID uuid.UUID
+	if err := stmt.GetContext(ctx, &updatedID, params); err != nil {
+		if err == sql.ErrNoRows {
+			return fmt.Errorf("user with ID %v not found", user.ID)
+		}
+		return fmt.Errorf("error executing update query: %w", err)
+	}
+
+	// Ensure that the returned id matches the ID we intended to update
+	if updatedID != user.ID {
+		return fmt.Errorf("updated user ID mismatch: expected %v, got %v", user.ID, updatedID)
+	}
+
+	return nil
 }

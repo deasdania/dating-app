@@ -20,14 +20,13 @@ func TestStorage_Swipe(t *testing.T) {
 	// Prepare test data user
 	userID := uuid.New()
 	testDataUser := &models.User{
-		ID:              userID,
-		Username:        "testuser",
-		Password:        "securepassword",
-		Email:           "testuser@example.com",
-		CreatedAt:       time.Now(),
-		IsPremium:       false,
-		Verified:        true,
-		DailySwipeCount: 10,
+		ID:        userID,
+		Username:  "testuser",
+		Password:  "securepassword",
+		Email:     "testuser@example.com",
+		CreatedAt: time.Now(),
+		IsPremium: false,
+		Verified:  true,
 	}
 
 	// Create a new user
@@ -41,6 +40,7 @@ func TestStorage_Swipe(t *testing.T) {
 	profileID := uuid.New()
 	testDataProfile := &models.Profile{
 		ID:          profileID,
+		UserID:      testDataUser.ID,
 		Username:    "testprofile",
 		Description: "This is a test profile",
 		ImageURL:    "https://example.com/image.jpg",

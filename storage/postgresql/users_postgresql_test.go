@@ -20,14 +20,13 @@ func TestStorage_User(t *testing.T) {
 	// Prepare test data
 	userID := uuid.New()
 	testData := &models.User{
-		ID:              userID,
-		Username:        "testuser",
-		Password:        "securepassword",
-		Email:           "testuser@example.com",
-		CreatedAt:       time.Now(),
-		IsPremium:       false,
-		Verified:        true,
-		DailySwipeCount: 10,
+		ID:        userID,
+		Username:  "testuser",
+		Password:  "securepassword",
+		Email:     "testuser@example.com",
+		CreatedAt: time.Now(),
+		IsPremium: false,
+		Verified:  true,
 	}
 
 	// Create a new user

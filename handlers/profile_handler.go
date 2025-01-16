@@ -60,10 +60,10 @@ func (h *Handlers) GetProfile(c echo.Context) error {
 
 	// Get profile from core
 	ctx := c.Request().Context()
-	profile, err := h.core.GetProfile(ctx, uid)
+	status, profile, err := h.core.GetProfile(ctx, uid)
 	if err != nil {
 		h.log.Errorf("Error fetching profile for user ID %v: %v", uid, err) // Log the error with context
-		return h.RespondWithError(c, http.StatusInternalServerError, status.SystemErrCode_Generic, err.Error())
+		return h.RespondWithError(c, http.StatusInternalServerError, status, err.Error())
 	}
 
 	c.JSON(http.StatusOK, gin.H{"profile": profile})
@@ -91,17 +91,17 @@ func (h *Handlers) SetProfile(c echo.Context) error {
 
 	// Set profile in core
 	ctx := c.Request().Context()
-	err = h.core.SetProfile(ctx, uid, &profile)
+	status, err := h.core.SetProfile(ctx, uid, &profile)
 	if err != nil {
 		h.log.Errorf("Error setting profile for user ID %v: %v", uid, err) // Log the error with context
-		return h.RespondWithError(c, http.StatusInternalServerError, status.SystemErrCode_Generic, err.Error())
+		return h.RespondWithError(c, http.StatusInternalServerError, status, err.Error())
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "successfully update the profile"})
 	return nil
 }
 
-func (h *Handlers) GetPeopleProfiles(c echo.Context) error {
+func (h *Handlers) GetAvailableProfiles(c echo.Context) error {
 	// Extract user ID from token (optional in this case, but you can validate it)
 	uid, err := h.ExtractUserIDFromToken(c)
 	if err != nil {
@@ -141,17 +141,17 @@ func (h *Handlers) GetPeopleProfiles(c echo.Context) error {
 	h.log.Infof("limit:%s, %d", limitStr, limit)
 	// Call core function to get profiles (with pagination)
 	ctx := c.Request().Context()
-	profiles, err := h.core.GetPeopleProfiles(ctx, uid, page, limit)
+	status, profiles, err := h.core.GetPeopleProfiles(ctx, uid, page, limit)
 	if err != nil {
 		h.log.Errorf("Error fetching profiles with page %d and limit %d: %v", page, limit, err) // Log the error with pagination context
-		return h.RespondWithError(c, http.StatusInternalServerError, status.SystemErrCode_Generic, err.Error())
+		return h.RespondWithError(c, http.StatusInternalServerError, status, err.Error())
 	}
 
 	c.JSON(http.StatusOK, gin.H{"profiles": profiles})
 	return nil
 }
 
-func (h *Handlers) GetPeopleProfileByID(c echo.Context) error {
+func (h *Handlers) GetProfileByID(c echo.Context) error {
 	// Extract user ID from token
 	_, err := h.ExtractUserIDFromToken(c)
 	if err != nil {
@@ -174,14 +174,14 @@ func (h *Handlers) GetPeopleProfileByID(c echo.Context) error {
 
 	// Fetch profile by ID
 	ctx := c.Request().Context()
-	profile, err := h.core.GetPeopleProfileByID(ctx, &profileUID)
+	status, profile, err := h.core.GetPeopleProfileByID(ctx, &profileUID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			h.log.Errorf("Profile not found for ID %v: %v", profileUID, err) // Log if profile is not found
-			return h.RespondWithError(c, http.StatusNotFound, status.UserErrCode_ProfileNotFound, "Profile not found")
+			return h.RespondWithError(c, http.StatusNotFound, status, "Profile not found")
 		}
 		h.log.Errorf("Error fetching profile by ID %v: %v", profileUID, err) // Log the error with profile ID context
-		return h.RespondWithError(c, http.StatusInternalServerError, status.SystemErrCode_Generic, err.Error())
+		return h.RespondWithError(c, http.StatusInternalServerError, status, err.Error())
 	}
 
 	c.JSON(http.StatusOK, gin.H{"profile": profile})
