@@ -14,7 +14,8 @@ import (
 	"github.com/deasdania/dating-app/status"
 	"github.com/deasdania/dating-app/storage/models"
 	ps "github.com/deasdania/dating-app/storage/postgresql"
-	"github.com/deasdania/dating-app/storage/redis"
+	redis "github.com/deasdania/dating-app/storage/redis"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -50,6 +51,7 @@ func NewHandlers(
 	v1GroupAuth.GET("/profiles/:id", handler.GetPeopleProfileByID)
 
 	v1GroupAuth.POST("/swipe", handler.Swipe)
+	v1GroupAuth.POST("/premium", handler.Premium)
 
 }
 
@@ -76,6 +78,7 @@ type CoreI interface {
 	GetPeopleProfileByID(ctx context.Context, profileID *uuid.UUID) (*models.Profile, error)
 
 	Swipe(ctx context.Context, req *models.Swipe) (status.DatingStatusCode, error)
+	SetPremium(ctx context.Context, userID *uuid.UUID, typeStr string) (status.DatingStatusCode, error)
 }
 
 func (b *API) v1(e *echo.Echo, um *core.Core, mm *middlewareManager) {

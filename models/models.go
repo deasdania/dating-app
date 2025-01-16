@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/deasdania/dating-app/status"
 )
@@ -15,7 +16,9 @@ type ResponseBase struct {
 // NewResponseError creates a new error response with the given status code and message
 func NewResponseError(httpStatus int64, statusCode status.DatingStatusCode, msg string) *ResponseBase {
 	statusRes := status.ResponseFromCode(statusCode)
-	statusRes.StatusDesc = fmt.Sprintf(statusRes.StatusDesc, msg)
+	if strings.Contains(statusRes.StatusDesc, ":") {
+		statusRes.StatusDesc = fmt.Sprintf(statusRes.StatusDesc, msg)
+	}
 	return &ResponseBase{
 		Status:  httpStatus,
 		Details: statusRes,

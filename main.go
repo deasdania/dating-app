@@ -138,6 +138,14 @@ func runServer() {
 		logger.Fatalf("error connecting to Redis: %v", err)
 	}
 	defer rc.Cl.Close()
+
+	err = rc.Cl.Ping(ctx).Err()
+	defer func() {
+		if err := rc.Cl.Close(); err != nil {
+			logger.Info("failed to close the Redis!")
+		}
+	}()
+
 	logger.Info("successfully connected to the Redis!")
 
 	appEnvStr := config.GetString("server.appEnv")

@@ -10,7 +10,7 @@ type DatingStatusCode string
 const (
 	EmptyCode               DatingStatusCode = ""
 	genericIntegrationsCode string           = "DAPPSXXX5000"
-	datingStatusCodeLen     int              = 11
+	datingStatusCodeLen     int              = 12
 )
 
 var (

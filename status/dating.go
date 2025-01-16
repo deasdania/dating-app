@@ -23,6 +23,7 @@ const (
 	UserErrCode_ProfileNotFound                 DatingStatusCode = "DAPPSXXX4007"
 	UserErrCode_ReachDailyLimit                 DatingStatusCode = "DAPPSXXX4008"
 	UserErrCode_AlreadySwiped                   DatingStatusCode = "DAPPSXXX4009"
+	UserErrCode_InvalidRequestPremiumPackage    DatingStatusCode = "DAPPSXXX4010"
 
 	SystemErrCode_Generic                       DatingStatusCode = "DAPPSXXX5000"
 	SystemErrCode_FailedReadMetadata            DatingStatusCode = "DAPPSXXX5002"
@@ -57,6 +58,7 @@ var datingMap = map[DatingStatusCode]StatusResponse{
 	UserErrCode_ProfileNotFound:                 {StatusDesc: "profile not found"},
 	UserErrCode_AlreadySwiped:                   {StatusDesc: "profile already swipped today"},
 	UserErrCode_ReachDailyLimit:                 {StatusDesc: "you have reached your daily swipe limit."},
+	UserErrCode_InvalidRequestPremiumPackage:    {StatusDesc: "type is required ('remove_quota' or 'verified_label')"},
 
 	// 5XXX - system errors
 	SystemErrCode_Generic:                 {StatusDesc: "generic system error"},
