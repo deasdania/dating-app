@@ -41,8 +41,13 @@ func NewHandlers(
 	}
 	v1GroupNoAuth.POST("/signup", handler.SignUp)
 	v1GroupNoAuth.POST("/login", handler.Login)
+
 	v1GroupAuth.POST("/profile", handler.SetProfile)
 	v1GroupAuth.GET("/profile", handler.GetProfile)
+	v1GroupAuth.GET("/profiles", handler.GetPeopleProfiles)
+	v1GroupAuth.GET("/profiles/:id", handler.GetPeopleProfileByID)
+
+	v1GroupAuth.POST("/swipe", handler.Swipe)
 
 }
 
@@ -61,9 +66,11 @@ type middlewareManager struct {
 type CoreI interface {
 	SignUp(ctx context.Context, user *models.User) error
 	Login(ctx context.Context, input *models.User) (string, error)
+
 	GetProfile(ctx context.Context, userID *uuid.UUID) (*models.Profile, error)
 	SetProfile(ctx context.Context, userID *uuid.UUID, profile *models.Profile) (bool, error)
-	GetPeopleProfiles(ctx context.Context) ([]*models.Profile, error)
+	GetPeopleProfiles(ctx context.Context, page, limit uint) ([]*models.Profile, error)
+	GetPeopleProfileByID(ctx context.Context, profileID *uuid.UUID) (*models.Profile, error)
 }
 
 func (b *API) v1(e *echo.Echo, um *core.Core, mm *middlewareManager) {

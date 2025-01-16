@@ -18,6 +18,7 @@ const (
 	UserErrCode_MissingCredentials DatingStatusCode = "DAPPSXXX4002"
 	UserErrCode_InvalidRequest     DatingStatusCode = "DAPPSXXX4003"
 	UserErrCode_NotFoundDating     DatingStatusCode = "DAPPSXXX4004"
+	UserErrCode_ProfileNotFound    DatingStatusCode = "DAPPSXXX4005"
 
 	SystemErrCode_Generic                 DatingStatusCode = "DAPPSXXX5000"
 	SystemErrCode_FailedReadMetadata      DatingStatusCode = "DAPPSXXX5002"
@@ -41,6 +42,7 @@ var datingMap = map[DatingStatusCode]StatusResponse{
 	UserErrCode_MissingCredentials: {StatusDesc: "missing credentials"},
 	UserErrCode_InvalidRequest:     {StatusDesc: "Invalid request: %s"},
 	UserErrCode_NotFoundDating:     {StatusDesc: "not found dating"},
+	UserErrCode_ProfileNotFound:    {StatusDesc: "profile not found"},
 
 	// 5XXX - system errors
 	SystemErrCode_Generic:                 {StatusDesc: "generic system error"},

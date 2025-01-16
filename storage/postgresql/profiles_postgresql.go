@@ -82,6 +82,7 @@ func (s *Storage) GetProfiles(ctx context.Context, opts ...models.ProfileFilterO
 	}
 
 	query, args := buildProfileFilter(filter)
+
 	stmt, err := s.db.PrepareNamedContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("preparing named query for GetProfiles: %w", err)
@@ -142,6 +143,27 @@ func buildProfileFilter(filter *models.ProfileFilter) (string, map[string]interf
 		query = addQueryString(query, updatedAtProfileClause)
 		params["updated_at"] = filter.UpdatedAt
 	}
+
+	// Handle pagination: Page and Limit
+	page := filter.Page   // Default page
+	limit := filter.Limit // Default limit
+
+	// Override with filter values, if provided
+	if filter.Page == 0 {
+		page = 1
+	}
+
+	if filter.Limit == 0 {
+		limit = 10
+	}
+
+	// Calculate the offset based on the page and limit
+	offset := (page - 1) * limit // Offset for the query
+
+	// Add pagination (LIMIT and OFFSET) to the query
+	query += fmt.Sprintf(" LIMIT :limit OFFSET :offset")
+	params["limit"] = limit
+	params["offset"] = offset
 
 	return query, params
 }

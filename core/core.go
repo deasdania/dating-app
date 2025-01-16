@@ -148,11 +148,28 @@ func (c *Core) SetProfile(ctx context.Context, userID *uuid.UUID, req *models.Pr
 	return isNew, nil
 }
 
-func (c *Core) GetPeopleProfiles(ctx context.Context) ([]*models.Profile, error) {
+func (c *Core) GetPeopleProfiles(ctx context.Context, page, limit uint) ([]*models.Profile, error) {
 	c.log.Info("starting get people profiles core")
 
-	//	profiles, err := c.storage.GetProfiles(ctx)
-	//
-	// return
-	return nil, nil
+	profiles, err := c.storage.GetProfiles(ctx, models.ProfileFilterByPage(page), models.ProfileFilterByLimit(limit))
+	if err != nil {
+		c.log.Error("Failed get profiles", err)
+		return nil, errors.New("failed get profiles")
+	}
+	return profiles, nil
+}
+
+func (c *Core) GetPeopleProfileByID(ctx context.Context, profileID *uuid.UUID) (*models.Profile, error) {
+	c.log.Info("starting get profile by id core")
+
+	profiles, err := c.storage.GetProfiles(ctx, models.ProfileFilterByID(profileID))
+	var profile *models.Profile
+	if profiles != nil && len(profiles) > 0 {
+		profile = profiles[0] // username is unique, so it should be only one for each
+	} else {
+		c.log.Error("User not found", err)
+		return nil, errors.New("not found")
+	}
+
+	return profile, nil
 }

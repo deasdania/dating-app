@@ -1,8 +1,11 @@
 package handlers
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/deasdania/dating-app/config"
@@ -14,28 +17,53 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func (h *Handlers) GetProfile(c echo.Context) error {
+// Helper to log and return errors with a standard response
+func (h *Handlers) RespondWithError(c echo.Context, statusCode int64, errCode status.DatingStatusCode, errMsg string) error {
+	h.log.Error(fmt.Sprintf("Error [%s]: %s", errCode, errMsg)) // Log the error with code and message
+	c.JSON(int(statusCode), models.NewResponseError(statusCode, errCode, errMsg))
+	return nil
+}
+
+// ExtractUserIDFromToken extracts the user ID from the Authorization token
+func (h *Handlers) ExtractUserIDFromToken(c echo.Context) (*uuid.UUID, error) {
 	authHeader := c.Request().Header.Get("Authorization")
-	authHeaderparts := strings.Split(authHeader, " ")
-	token := authHeaderparts[1]
-
-	// Extract User ID
-	getUserID, err := config.ExtractIDFromToken(
-		token,
-		h.secret,
-	)
-	if err != nil {
-		h.log.Error("extract user_id : ", err.Error())
-		c.JSON(http.StatusBadRequest, models.NewResponseError(http.StatusUnauthorized, status.UserErrCode_Unauthorized, err.Error()))
-		return err
+	if authHeader == "" {
+		return nil, errors.New("missing authorization header")
 	}
-	ctx := c.Request().Context()
-	uid, err := uuid.Parse(getUserID)
 
-	profile, err := h.core.GetProfile(ctx, &uid)
+	authHeaderParts := strings.Split(authHeader, " ")
+	if len(authHeaderParts) != 2 || authHeaderParts[0] != "Bearer" {
+		return nil, errors.New("invalid authorization header format")
+	}
+
+	token := authHeaderParts[1]
+	userID, err := config.ExtractIDFromToken(token, h.secret)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, models.NewResponseError(http.StatusInternalServerError, status.SystemErrCode_Generic, err.Error()))
-		return err
+		return nil, fmt.Errorf("failed to extract user ID: %v", err)
+	}
+
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid user ID format: %v", err)
+	}
+
+	return &uid, nil
+}
+
+func (h *Handlers) GetProfile(c echo.Context) error {
+	// Extract user ID from token
+	uid, err := h.ExtractUserIDFromToken(c)
+	if err != nil {
+		h.log.Error(fmt.Sprintf("Failed to extract user ID from token: %v", err)) // Log the error
+		return h.RespondWithError(c, http.StatusUnauthorized, status.UserErrCode_Unauthorized, err.Error())
+	}
+
+	// Get profile from core
+	ctx := c.Request().Context()
+	profile, err := h.core.GetProfile(ctx, uid)
+	if err != nil {
+		h.log.Error(fmt.Sprintf("Error fetching profile for user ID %v: %v", uid, err)) // Log the error with context
+		return h.RespondWithError(c, http.StatusInternalServerError, status.SystemErrCode_Generic, err.Error())
 	}
 
 	c.JSON(http.StatusOK, gin.H{"profile": profile})
@@ -45,42 +73,122 @@ func (h *Handlers) GetProfile(c echo.Context) error {
 func (h *Handlers) SetProfile(c echo.Context) error {
 	var profile smodels.Profile
 	if err := c.Bind(&profile); err != nil {
-		c.JSON(http.StatusBadRequest, models.NewResponseError(http.StatusBadRequest, status.UserErrCode_InvalidRequest, err.Error()))
-		return err
+		h.log.Error(fmt.Sprintf("Failed to bind profile data: %v", err)) // Log binding error
+		return h.RespondWithError(c, http.StatusBadRequest, status.UserErrCode_InvalidRequest, err.Error())
 	}
-	ctx := c.Request().Context()
+
 	if err := validateStruct(h.validate, profile); err != nil {
-		h.log.Error("err validator:", err)
-		c.JSON(http.StatusBadRequest, models.NewResponseError(http.StatusBadRequest, status.UserErrCode_InvalidRequest, err.Error()))
-		return err
+		h.log.Error(fmt.Sprintf("Validation error for profile: %v", err)) // Log validation error
+		return h.RespondWithError(c, http.StatusBadRequest, status.UserErrCode_InvalidRequest, err.Error())
 	}
 
-	authHeader := c.Request().Header.Get("Authorization")
-	authHeaderparts := strings.Split(authHeader, " ")
-	token := authHeaderparts[1]
-
-	// Extract User ID
-	getUserID, err := config.ExtractIDFromToken(
-		token,
-		h.secret,
-	)
+	// Extract user ID from token
+	uid, err := h.ExtractUserIDFromToken(c)
 	if err != nil {
-		h.log.Error("extract user_id : ", err.Error())
-		c.JSON(http.StatusBadRequest, models.NewResponseError(http.StatusUnauthorized, status.UserErrCode_Unauthorized, err.Error()))
-		return err
+		h.log.Error(fmt.Sprintf("Failed to extract user ID from token: %v", err)) // Log the error
+		return h.RespondWithError(c, http.StatusUnauthorized, status.UserErrCode_Unauthorized, err.Error())
 	}
-	uid, err := uuid.Parse(getUserID)
 
-	isNew, err := h.core.SetProfile(ctx, &uid, &profile)
+	// Set profile in core
+	ctx := c.Request().Context()
+	isNew, err := h.core.SetProfile(ctx, uid, &profile)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, models.NewResponseError(http.StatusInternalServerError, status.SystemErrCode_Generic, err.Error()))
-		return err
+		h.log.Error(fmt.Sprintf("Error setting profile for user ID %v: %v", uid, err)) // Log the error with context
+		return h.RespondWithError(c, http.StatusInternalServerError, status.SystemErrCode_Generic, err.Error())
 	}
 
 	msg := "update"
 	if isNew {
 		msg = "create"
 	}
+
 	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("successfully %s the profile", msg)})
+	return nil
+}
+
+func (h *Handlers) GetPeopleProfiles(c echo.Context) error {
+	// Extract user ID from token (optional in this case, but you can validate it)
+	_, err := h.ExtractUserIDFromToken(c)
+	if err != nil {
+		h.log.Error(fmt.Sprintf("Failed to extract user ID from token: %v", err)) // Log the error
+		return h.RespondWithError(c, http.StatusUnauthorized, status.UserErrCode_Unauthorized, err.Error())
+	}
+
+	// Pagination logic
+	pageStr := c.QueryParam("page")
+	limitStr := c.QueryParam("limit")
+
+	// Default values
+	page := uint(1)   // Default to 1 if not specified
+	limit := uint(10) // Default to 10 if not specified
+
+	// Convert page query param to uint
+	if pageStr != "" {
+		parsedPage, err := strconv.ParseUint(pageStr, 10, 32) // Parse as uint
+		if err != nil {
+			h.log.Error(fmt.Sprintf("Invalid page value: %v", err)) // Log error
+			return h.RespondWithError(c, http.StatusBadRequest, status.UserErrCode_InvalidRequest, "Invalid page parameter")
+		}
+		page = uint(parsedPage) // Store the parsed value
+	}
+
+	// Convert limit query param to uint
+	if limitStr != "" {
+		parsedLimit, err := strconv.ParseUint(limitStr, 10, 32) // Parse as uint
+		if err != nil {
+			h.log.Error(fmt.Sprintf("Invalid limit value: %v", err)) // Log error
+			return h.RespondWithError(c, http.StatusBadRequest, status.UserErrCode_InvalidRequest, "Invalid limit parameter")
+		}
+		limit = uint(parsedLimit) // Store the parsed value
+	}
+
+	h.log.Infof("page:%s, %d", pageStr, page)
+	h.log.Infof("limit:%s, %d", limitStr, limit)
+	// Call core function to get profiles (with pagination)
+	ctx := c.Request().Context()
+	profiles, err := h.core.GetPeopleProfiles(ctx, page, limit)
+	if err != nil {
+		h.log.Error(fmt.Sprintf("Error fetching profiles with page %s and limit %s: %v", page, limit, err)) // Log the error with pagination context
+		return h.RespondWithError(c, http.StatusInternalServerError, status.SystemErrCode_Generic, err.Error())
+	}
+
+	c.JSON(http.StatusOK, gin.H{"profiles": profiles})
+	return nil
+}
+
+func (h *Handlers) GetPeopleProfileByID(c echo.Context) error {
+	// Extract user ID from token
+	_, err := h.ExtractUserIDFromToken(c)
+	if err != nil {
+		h.log.Error(fmt.Sprintf("Failed to extract user ID from token: %v", err)) // Log the error
+		return h.RespondWithError(c, http.StatusUnauthorized, status.UserErrCode_Unauthorized, err.Error())
+	}
+
+	// Parse the profile ID from the URL parameter
+	profileID := c.Param("id")
+	if profileID == "" {
+		h.log.Error("Missing profile ID in URL") // Log the error
+		return h.RespondWithError(c, http.StatusBadRequest, status.UserErrCode_InvalidRequest, "Profile ID is required")
+	}
+
+	profileUID, err := uuid.Parse(profileID)
+	if err != nil {
+		h.log.Error(fmt.Sprintf("Invalid profile ID format: %v", err)) // Log the error
+		return h.RespondWithError(c, http.StatusBadRequest, status.UserErrCode_InvalidRequest, "Invalid profile ID")
+	}
+
+	// Fetch profile by ID
+	ctx := c.Request().Context()
+	profile, err := h.core.GetPeopleProfileByID(ctx, &profileUID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			h.log.Error(fmt.Sprintf("Profile not found for ID %v: %v", profileUID, err)) // Log if profile is not found
+			return h.RespondWithError(c, http.StatusNotFound, status.UserErrCode_ProfileNotFound, "Profile not found")
+		}
+		h.log.Error(fmt.Sprintf("Error fetching profile by ID %v: %v", profileUID, err)) // Log the error with profile ID context
+		return h.RespondWithError(c, http.StatusInternalServerError, status.SystemErrCode_Generic, err.Error())
+	}
+
+	c.JSON(http.StatusOK, gin.H{"profile": profile})
 	return nil
 }

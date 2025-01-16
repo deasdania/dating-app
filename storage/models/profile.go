@@ -20,6 +20,8 @@ type ProfileFilter struct {
 	Username    string
 	Description string
 	ImageURL    string
+	Page        uint
+	Limit       uint
 	CreatedAt   *time.Time
 	UpdatedAt   *time.Time
 }
@@ -61,5 +63,17 @@ func ProfileFilterByCreatedAt(createdAt *time.Time) ProfileFilterOption {
 func ProfileFilterByUpdatedAt(updatedAt *time.Time) ProfileFilterOption {
 	return func(f *ProfileFilter) {
 		f.UpdatedAt = updatedAt
+	}
+}
+
+func ProfileFilterByPage(input uint) ProfileFilterOption {
+	return func(f *ProfileFilter) {
+		f.Page = input
+	}
+}
+
+func ProfileFilterByLimit(input uint) ProfileFilterOption {
+	return func(f *ProfileFilter) {
+		f.Limit = input
 	}
 }
