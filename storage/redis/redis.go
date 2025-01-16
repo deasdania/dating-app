@@ -22,7 +22,7 @@ type RedisConnection struct {
 	Cl *redis.Client
 }
 
-func NewRedisConnection(cfg Config) (*RedisConnection, error) {
+func NewRedisConnection(ctx context.Context, cfg Config) (*RedisConnection, error) {
 	redisOptions := &redis.Options{
 		Addr:        fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
 		Password:    cfg.Password,
@@ -32,7 +32,7 @@ func NewRedisConnection(cfg Config) (*RedisConnection, error) {
 	}
 
 	cl := redis.NewClient(redisOptions)
-	if err := cl.Ping(context.Background()).Err(); err != nil {
+	if err := cl.Ping(ctx).Err(); err != nil {
 		return nil, err
 	}
 

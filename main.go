@@ -1,8 +1,14 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"log"
+	"net/http"
+	"os"
+	"os/signal"
 	"strings"
+	"time"
 
 	cfg "github.com/deasdania/dating-app/config"
 	"github.com/deasdania/dating-app/handlers"
@@ -124,7 +130,10 @@ func runServer() {
 		SSL:      config.GetBool("redis.ssl"),
 	}
 
-	rc, err := redis.NewRedisConnection(redisConfig)
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+
+	rc, err := redis.NewRedisConnection(ctx, redisConfig)
 	if err != nil {
 		logger.Fatalf("error connecting to Redis: %v", err)
 	}
@@ -157,5 +166,34 @@ func runServer() {
 
 	// Ensure the app starts the server or handles requests
 	logger.Info("Server is starting...")
-	e.Logger.Fatal(e.Start(":8080")) // Ensure the server actually starts listening
+
+	// Create a channel to signal when the server stops
+	shutdownCh := make(chan error, 1)
+
+	// Start the server in a goroutine
+	go func() {
+		if err := e.Start(":8080"); err != nil && err != http.ErrServerClosed {
+			shutdownCh <- fmt.Errorf("failed to start server: %w", err)
+		}
+	}()
+
+	// Wait for an OS signal or server shutdown signal
+	select {
+	case err := <-shutdownCh:
+		// If the server encounters an error
+		logger.Fatal("Server error:", err)
+	case <-ctx.Done():
+		// If an interrupt signal is received (Ctrl+C, SIGTERM)
+		logger.Info("Gracefully shutting down server...")
+
+		// Set a timeout for graceful shutdown
+		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer shutdownCancel()
+
+		// Gracefully stop the Echo server
+		if shutdownErr := e.Shutdown(shutdownCtx); shutdownErr != nil {
+			logger.Fatal("Graceful shutdown failed:", shutdownErr)
+		}
+		logger.Info("Server gracefully shut down")
+	}
 }

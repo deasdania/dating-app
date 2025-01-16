@@ -1,15 +1,5 @@
 [
   {
-    "method": "echo_route_not_found",
-    "path": "/v1",
-    "name": "github.com/labstack/echo/v4.init.func1"
-  },
-  {
-    "method": "POST",
-    "path": "/v1/login",
-    "name": "github.com/deasdania/dating-app/handlers.(*Handlers).Login-fm"
-  },
-  {
     "method": "POST",
     "path": "/v1/profile",
     "name": "github.com/deasdania/dating-app/handlers.(*Handlers).SetProfile-fm"
@@ -20,9 +10,14 @@
     "name": "github.com/deasdania/dating-app/handlers.(*Handlers).GetProfile-fm"
   },
   {
-    "method": "POST",
-    "path": "/v1/swipe",
-    "name": "github.com/deasdania/dating-app/handlers.(*Handlers).Swipe-fm"
+    "method": "GET",
+    "path": "/v1/profiles",
+    "name": "github.com/deasdania/dating-app/handlers.(*Handlers).GetPeopleProfiles-fm"
+  },
+  {
+    "method": "echo_route_not_found",
+    "path": "/v1",
+    "name": "github.com/labstack/echo/v4.init.func1"
   },
   {
     "method": "echo_route_not_found",
@@ -35,13 +30,18 @@
     "name": "github.com/deasdania/dating-app/handlers.(*Handlers).SignUp-fm"
   },
   {
-    "method": "GET",
-    "path": "/v1/profiles",
-    "name": "github.com/deasdania/dating-app/handlers.(*Handlers).GetPeopleProfiles-fm"
+    "method": "POST",
+    "path": "/v1/login",
+    "name": "github.com/deasdania/dating-app/handlers.(*Handlers).Login-fm"
   },
   {
     "method": "GET",
     "path": "/v1/profiles/:id",
     "name": "github.com/deasdania/dating-app/handlers.(*Handlers).GetPeopleProfileByID-fm"
+  },
+  {
+    "method": "POST",
+    "path": "/v1/swipe",
+    "name": "github.com/deasdania/dating-app/handlers.(*Handlers).Swipe-fm"
   }
 ]
