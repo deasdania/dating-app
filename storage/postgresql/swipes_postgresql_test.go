@@ -79,7 +79,7 @@ func TestStorage_Swipe(t *testing.T) {
 	// Fetch the created swipe by ID
 	filters := []models.SwipeFilterOption{}
 	filters = append(filters, models.SwipeFilterByID(&uuidSwipe))
-	swipes, err := s.GetSwipes(ctx, filters...)
+	swipes, _, err := s.GetSwipes(ctx, filters...)
 	if err != nil {
 		t.Errorf("Storage.GetSwipes() error = %v", err)
 	}
@@ -94,7 +94,7 @@ func TestStorage_Swipe(t *testing.T) {
 	// Clean and add Direction filter
 	filters = []models.SwipeFilterOption{}
 	filters = append(filters, models.SwipeFilterByDirection(testDataSwipe.Direction))
-	swipes, err = s.GetSwipes(ctx, filters...)
+	swipes, _, err = s.GetSwipes(ctx, filters...)
 	if err != nil {
 		t.Errorf("Storage.GetSwipes() error = %v", err)
 	}

@@ -40,11 +40,12 @@ const (
 	`
 
 	// Swipe Filter Clauses
-	swipesIDClause        = ` id = :id`
-	swipesUserIDClause    = ` user_id = :user_id`
-	swipesProfileIDClause = ` profile_id = :profile_id`
-	swipesDirectionClause = ` direction = :direction`
-	swipesCreatedAtClause = ` created_at = :created_at`
+	swipesIDClause            = ` id = :id`
+	swipesUserIDClause        = ` user_id = :user_id`
+	swipesProfileIDClause     = ` profile_id = :profile_id`
+	swipesDirectionClause     = ` direction = :direction`
+	swipesCreatedAtClause     = ` created_at = :created_at`
+	swipesCreatedAtDateClause = ` created_at_date = :created_at_date`
 )
 
 func (s *Storage) CreateSwipe(ctx context.Context, swipe *models.Swipe) (*uuid.UUID, error) {
@@ -71,7 +72,7 @@ func (s *Storage) CreateSwipe(ctx context.Context, swipe *models.Swipe) (*uuid.U
 	return &id, nil
 }
 
-func (s *Storage) GetSwipes(ctx context.Context, opts ...models.SwipeFilterOption) ([]*models.Swipe, error) {
+func (s *Storage) GetSwipes(ctx context.Context, opts ...models.SwipeFilterOption) ([]*models.Swipe, []*uuid.UUID, error) {
 	filter := &models.SwipeFilter{}
 	for _, opt := range opts {
 		opt(filter)
@@ -80,17 +81,18 @@ func (s *Storage) GetSwipes(ctx context.Context, opts ...models.SwipeFilterOptio
 	query, args := buildSwipeFilter(filter)
 	stmt, err := s.db.PrepareNamedContext(ctx, query)
 	if err != nil {
-		return nil, fmt.Errorf("preparing named query for GetSwipes: %w", err)
+		return nil, nil, fmt.Errorf("preparing named query for GetSwipes: %w", err)
 	}
 	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx, args)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer rows.Close()
 
 	var swipes []*models.Swipe
+	var swipesProfileIDs []*uuid.UUID
 	for rows.Next() {
 		var swipe models.Swipe
 		err := rows.Scan(
@@ -101,16 +103,17 @@ func (s *Storage) GetSwipes(ctx context.Context, opts ...models.SwipeFilterOptio
 			&swipe.CreatedAt,
 		)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		swipes = append(swipes, &swipe)
+		swipesProfileIDs = append(swipesProfileIDs, swipe.ProfileID)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return swipes, nil
+	return swipes, swipesProfileIDs, nil
 }
 
 func buildSwipeFilter(filter *models.SwipeFilter) (string, map[string]interface{}) {
@@ -136,6 +139,10 @@ func buildSwipeFilter(filter *models.SwipeFilter) (string, map[string]interface{
 	if filter.CreatedAt != nil {
 		query = addQueryString(query, swipesCreatedAtClause)
 		params["created_at"] = filter.CreatedAt
+	}
+	if filter.CreatedAtDate != "" {
+		query = addQueryString(query, swipesCreatedAtDateClause)
+		params["created_at_date"] = filter.CreatedAtDate
 	}
 
 	return query, params

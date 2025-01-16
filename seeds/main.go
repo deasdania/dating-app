@@ -47,23 +47,5 @@ func main() {
 		fmt.Printf("Inserted user: %s\n", username)
 	}
 
-	// Seed data for profiles
-	for i := 1; i <= 50; i++ {
-		profileUsername := fmt.Sprintf("profile%d", i)
-		description := fmt.Sprintf("This is the description for profile %d.", i)
-		imageURL := fmt.Sprintf("https://example.com/images/profile%d.jpg", i)
-
-		// Insert profile into the "profiles" table
-		_, err = db.Exec(`
-			INSERT INTO profiles (id, username, description, image_url)
-			VALUES ($1, $2, $3, $4)`,
-			uuid.New(), profileUsername, description, imageURL)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Printf("Inserted profile: %s\n", profileUsername)
-	}
-
 	fmt.Println("Seed data insertion complete.")
 }

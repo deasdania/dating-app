@@ -71,8 +71,8 @@ type CoreI interface {
 	Login(ctx context.Context, input *models.User) (string, error)
 
 	GetProfile(ctx context.Context, userID *uuid.UUID) (*models.Profile, error)
-	SetProfile(ctx context.Context, userID *uuid.UUID, profile *models.Profile) (bool, error)
-	GetPeopleProfiles(ctx context.Context, page, limit uint) ([]*models.Profile, error)
+	SetProfile(ctx context.Context, userID *uuid.UUID, profile *models.Profile) error
+	GetPeopleProfiles(ctx context.Context, userID *uuid.UUID, page, limit uint) ([]*models.Profile, error)
 	GetPeopleProfileByID(ctx context.Context, profileID *uuid.UUID) (*models.Profile, error)
 
 	Swipe(ctx context.Context, req *models.Swipe) (status.DatingStatusCode, error)

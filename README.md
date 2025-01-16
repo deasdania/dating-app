@@ -15,3 +15,18 @@ to add new migration file,
 cd migrations
 goose create create_users_table sql
 
+
+how to run the seeds
+cd seeds
+go run main.go
+
+use redis 
+docker run -d --name redis-stack-server -p 6379:6379 redis/redis-stack-server:latest
+docker run -d --name redis-stack -p 8001:8001 redis/redis-stack:latest
+
+
+open the redis with localhost:8001
+or cli 
+docker exec -t redis-stack redis-cli
+
+export REDIS_CONNECTION=redis://localhost:6379

@@ -8,6 +8,7 @@ import (
 
 type Profile struct {
 	ID          uuid.UUID `json:"id" db:"id"`
+	UserID      uuid.UUID `json:"user_id" db:"user_id"`
 	Username    string    `json:"username" db:"username"`
 	Description string    `json:"description" db:"description"`
 	ImageURL    string    `json:"image_url" db:"image_url"`
@@ -16,14 +17,16 @@ type Profile struct {
 }
 
 type ProfileFilter struct {
-	ID          *uuid.UUID
-	Username    string
-	Description string
-	ImageURL    string
-	Page        uint
-	Limit       uint
-	CreatedAt   *time.Time
-	UpdatedAt   *time.Time
+	ID                *uuid.UUID
+	UserID            *uuid.UUID
+	Username          string
+	Description       string
+	ImageURL          string
+	Page              uint
+	Limit             uint
+	ExcludeProfileIDs []*uuid.UUID
+	CreatedAt         *time.Time
+	UpdatedAt         *time.Time
 }
 
 type ProfileFilterOption func(*ProfileFilter)
@@ -33,6 +36,12 @@ type ProfileFilterOption func(*ProfileFilter)
 func ProfileFilterByID(id *uuid.UUID) ProfileFilterOption {
 	return func(f *ProfileFilter) {
 		f.ID = id
+	}
+}
+
+func ProfileFilterByUserID(id *uuid.UUID) ProfileFilterOption {
+	return func(f *ProfileFilter) {
+		f.UserID = id
 	}
 }
 
@@ -75,5 +84,11 @@ func ProfileFilterByPage(input uint) ProfileFilterOption {
 func ProfileFilterByLimit(input uint) ProfileFilterOption {
 	return func(f *ProfileFilter) {
 		f.Limit = input
+	}
+}
+
+func ProfileFilterByExcludeProfileIDs(input []*uuid.UUID) ProfileFilterOption {
+	return func(f *ProfileFilter) {
+		f.ExcludeProfileIDs = input
 	}
 }

@@ -91,24 +91,19 @@ func (h *Handlers) SetProfile(c echo.Context) error {
 
 	// Set profile in core
 	ctx := c.Request().Context()
-	isNew, err := h.core.SetProfile(ctx, uid, &profile)
+	err = h.core.SetProfile(ctx, uid, &profile)
 	if err != nil {
 		h.log.Errorf("Error setting profile for user ID %v: %v", uid, err) // Log the error with context
 		return h.RespondWithError(c, http.StatusInternalServerError, status.SystemErrCode_Generic, err.Error())
 	}
 
-	msg := "update"
-	if isNew {
-		msg = "create"
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("successfully %s the profile", msg)})
+	c.JSON(http.StatusOK, gin.H{"message": "successfully update the profile"})
 	return nil
 }
 
 func (h *Handlers) GetPeopleProfiles(c echo.Context) error {
 	// Extract user ID from token (optional in this case, but you can validate it)
-	_, err := h.ExtractUserIDFromToken(c)
+	uid, err := h.ExtractUserIDFromToken(c)
 	if err != nil {
 		h.log.Errorf("Failed to extract user ID from token: %v", err) // Log the error
 		return h.RespondWithError(c, http.StatusUnauthorized, status.UserErrCode_Unauthorized, err.Error())
@@ -146,7 +141,7 @@ func (h *Handlers) GetPeopleProfiles(c echo.Context) error {
 	h.log.Infof("limit:%s, %d", limitStr, limit)
 	// Call core function to get profiles (with pagination)
 	ctx := c.Request().Context()
-	profiles, err := h.core.GetPeopleProfiles(ctx, page, limit)
+	profiles, err := h.core.GetPeopleProfiles(ctx, uid, page, limit)
 	if err != nil {
 		h.log.Errorf("Error fetching profiles with page %d and limit %d: %v", page, limit, err) // Log the error with pagination context
 		return h.RespondWithError(c, http.StatusInternalServerError, status.SystemErrCode_Generic, err.Error())

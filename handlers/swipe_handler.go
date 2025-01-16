@@ -33,6 +33,12 @@ func (h *Handlers) handleRequestSwipe(c echo.Context, swipe *smodels.Swipe) erro
 		c.JSON(http.StatusBadRequest, models.NewResponseError(http.StatusBadRequest, status.UserErrCode_InvalidRequestDirectionRequired, ""))
 		return nil
 	}
+	switch swipe.Direction {
+	case "left":
+		swipe.Direction = "pass"
+	case "right":
+		swipe.Direction = "like"
+	}
 
 	return nil
 }

@@ -14,12 +14,20 @@ type Swipe struct {
 	CreatedAt time.Time  `json:"created_at" db:"created_at"`
 }
 
+func NewSwipe() *Swipe {
+	return &Swipe{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+	}
+}
+
 type SwipeFilter struct {
-	ID        *uuid.UUID
-	UserID    *uuid.UUID
-	ProfileID *uuid.UUID
-	Direction string
-	CreatedAt *time.Time
+	ID            *uuid.UUID
+	UserID        *uuid.UUID
+	ProfileID     *uuid.UUID
+	Direction     string
+	CreatedAt     *time.Time
+	CreatedAtDate string
 }
 
 type SwipeFilterOption func(*SwipeFilter)
@@ -53,5 +61,11 @@ func SwipeFilterByDirection(direction string) SwipeFilterOption {
 func SwipeFilterByCreatedAt(createdAt *time.Time) SwipeFilterOption {
 	return func(f *SwipeFilter) {
 		f.CreatedAt = createdAt
+	}
+}
+
+func SwipeFilterByCreatedAtDate(date string) SwipeFilterOption {
+	return func(f *SwipeFilter) {
+		f.CreatedAtDate = date
 	}
 }

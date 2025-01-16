@@ -72,3 +72,14 @@ func buildConnection(connStr string) (*rds.RedisConnection, func(), error) {
 
 	return &rds.RedisConnection{Cl: rdb}, cleanUpFn, nil
 }
+
+func TestRedisConnection(t *testing.T) {
+	// Use the testRedisCl client in your tests
+	_, err := testRedisCl.Cl.Ping(context.Background()).Result()
+	if err != nil {
+		t.Fatalf("failed to ping Redis: %v", err)
+	}
+
+	// Your test logic here
+	t.Log("Successfully connected to Redis")
+}

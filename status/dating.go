@@ -55,6 +55,7 @@ var datingMap = map[DatingStatusCode]StatusResponse{
 	UserErrCode_InvalidRequestDirectionRequired: {StatusDesc: "direction is required ('left' or 'right')"},
 	UserErrCode_NotFoundDating:                  {StatusDesc: "not found dating"},
 	UserErrCode_ProfileNotFound:                 {StatusDesc: "profile not found"},
+	UserErrCode_AlreadySwiped:                   {StatusDesc: "profile already swipped today"},
 	UserErrCode_ReachDailyLimit:                 {StatusDesc: "you have reached your daily swipe limit."},
 
 	// 5XXX - system errors

@@ -16,6 +16,7 @@ const (
 	createProfileQuery = `
 		INSERT INTO profiles (
 			id,
+			user_id,
 			username,
 			description,
 			image_url,
@@ -23,6 +24,7 @@ const (
 			updated_at
 		) VALUES (
 			:id,
+			:user_id,
 			:username,
 			:description,
 			:image_url,
@@ -34,10 +36,10 @@ const (
 	getProfileQuery = `
 		SELECT 
 			id,
+			user_id,
 			username,
-			description,
-			image_url,
-			created_at,
+			COALESCE(description, '') AS description,
+			COALESCE(image_url, '') AS image_url,created_at,
 			updated_at
 		FROM 
 			profiles
@@ -45,6 +47,7 @@ const (
 
 	// Profile Filter Clauses
 	profileIDClause        = ` id = :id`
+	profileUserIDClause    = ` user_id = :user_id`
 	usernameProfileClause  = ` username = :username`
 	imageURLClause         = ` image_url = :image_url`
 	createdAtProfileClause = ` created_at = :created_at`
@@ -82,7 +85,6 @@ func (s *Storage) GetProfiles(ctx context.Context, opts ...models.ProfileFilterO
 	}
 
 	query, args := buildProfileFilter(filter)
-
 	stmt, err := s.db.PrepareNamedContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("preparing named query for GetProfiles: %w", err)
@@ -100,6 +102,7 @@ func (s *Storage) GetProfiles(ctx context.Context, opts ...models.ProfileFilterO
 		var profile models.Profile
 		err := rows.Scan(
 			&profile.ID,
+			&profile.UserID,
 			&profile.Username,
 			&profile.Description,
 			&profile.ImageURL,
@@ -127,6 +130,10 @@ func buildProfileFilter(filter *models.ProfileFilter) (string, map[string]interf
 		query = addQueryString(query, profileIDClause)
 		params["id"] = filter.ID
 	}
+	if filter.UserID != nil {
+		query = addQueryString(query, profileUserIDClause)
+		params["user_id"] = filter.UserID
+	}
 	if filter.Username != "" {
 		query = addQueryString(query, usernameProfileClause)
 		params["username"] = filter.Username
@@ -144,9 +151,21 @@ func buildProfileFilter(filter *models.ProfileFilter) (string, map[string]interf
 		params["updated_at"] = filter.UpdatedAt
 	}
 
+	// Exclude profile IDs if they're provided (handling slice of pointers)
+	if len(filter.ExcludeProfileIDs) > 0 {
+		var ids string
+		for i, id := range filter.ExcludeProfileIDs {
+			ids += fmt.Sprintf("'%s'", id)
+			if i != len(filter.ExcludeProfileIDs)-1 {
+				ids += ","
+			}
+		}
+		query = addQueryString(query, fmt.Sprintf("id NOT IN (%s)", ids))
+	}
+
 	// Handle pagination: Page and Limit
-	page := filter.Page   // Default page
-	limit := filter.Limit // Default limit
+	page := filter.Page
+	limit := filter.Limit
 
 	// Override with filter values, if provided
 	if filter.Page == 0 {

@@ -102,15 +102,7 @@ func (c *Core) Login(ctx context.Context, input *models.User) (string, error) {
 func (c *Core) GetProfile(ctx context.Context, userID *uuid.UUID) (*models.Profile, error) {
 	c.log.Info("starting get profile core")
 
-	users, err := c.storage.GetUsers(ctx, models.UserFilterByID(userID))
-	var user *models.User
-	if users != nil && len(users) > 0 {
-		user = users[0] // username is unique, so it should be only one for each
-	} else {
-		c.log.Error("User not found", err)
-		return nil, errors.New("not found")
-	}
-	profiles, err := c.storage.GetProfiles(ctx, models.ProfileFilterByUsername(user.Username))
+	profiles, err := c.storage.GetProfiles(ctx, models.ProfileFilterByUserID(userID))
 	var profile *models.Profile
 	if profiles != nil && len(profiles) > 0 {
 		profile = profiles[0] // username is unique, so it should be only one for each
@@ -122,19 +114,14 @@ func (c *Core) GetProfile(ctx context.Context, userID *uuid.UUID) (*models.Profi
 	return profile, nil
 }
 
-func (c *Core) SetProfile(ctx context.Context, userID *uuid.UUID, req *models.Profile) (bool, error) {
+func (c *Core) SetProfile(ctx context.Context, userID *uuid.UUID, req *models.Profile) error {
 	c.log.Info("starting get profile core")
 
-	isNew := false
-	users, err := c.storage.GetUsers(ctx, models.UserFilterByID(userID))
-	var user *models.User
-	if users != nil && len(users) > 0 {
-		user = users[0] // username is unique, so it should be only one for each
-	} else {
+	profiles, err := c.storage.GetProfiles(ctx, models.ProfileFilterByUserID(userID))
+	if err != nil {
 		c.log.Error("User not found", err)
-		return isNew, errors.New("not found")
+		return errors.New("not found")
 	}
-	profiles, err := c.storage.GetProfiles(ctx, models.ProfileFilterByUsername(user.Username))
 	var profile *models.Profile
 	if profiles != nil && len(profiles) > 0 {
 		profile = profiles[0] // username is unique, so it should be only one for each
@@ -147,24 +134,37 @@ func (c *Core) SetProfile(ctx context.Context, userID *uuid.UUID, req *models.Pr
 			ImageURL:    req.ImageURL,
 		}); err != nil {
 			c.log.Error("Failed update profile", err)
-			return isNew, errors.New("failed update profile")
-		}
-	} else {
-		req.Username = user.Username
-		isNew = true
-		if _, err := c.storage.CreateProfile(ctx, req); err != nil {
-			c.log.Error("Failed create profile", err)
-			return isNew, errors.New("failed create profile")
+			return errors.New("failed update profile")
 		}
 	}
 
-	return isNew, nil
+	return nil
 }
 
-func (c *Core) GetPeopleProfiles(ctx context.Context, page, limit uint) ([]*models.Profile, error) {
+func (c *Core) GetPeopleProfiles(ctx context.Context, userID *uuid.UUID, page, limit uint) ([]*models.Profile, error) {
 	c.log.Info("starting get people profiles core")
 
-	profiles, err := c.storage.GetProfiles(ctx, models.ProfileFilterByPage(page), models.ProfileFilterByLimit(limit))
+	date := time.Now().Format("2006-01-02")
+
+	profiles, err := c.storage.GetProfiles(ctx, models.ProfileFilterByUserID(userID))
+	var profile *models.Profile
+	if profiles != nil && len(profiles) > 0 {
+		profile = profiles[0] // username is unique, so it should be only one for each
+	}
+
+	// get profile already swiped by the user
+	_, swipeProfileIDs, err := c.storage.GetSwipes(ctx, models.SwipeFilterByUserID(userID), models.SwipeFilterByCreatedAtDate(date))
+	if err != nil {
+		c.log.Error("Failed get swipes", err)
+		return nil, errors.New("failed get swipes")
+	}
+	// get profiles with excluding the user and the swipped profiles
+	profiles, err = c.storage.GetProfiles(
+		ctx,
+		models.ProfileFilterByPage(page),
+		models.ProfileFilterByLimit(limit),
+		models.ProfileFilterByExcludeProfileIDs(append([]*uuid.UUID{&profile.ID}, swipeProfileIDs...)),
+	)
 	if err != nil {
 		c.log.Error("Failed get profiles", err)
 		return nil, errors.New("failed get profiles")
@@ -192,7 +192,7 @@ func (c *Core) Swipe(ctx context.Context, req *models.Swipe) (status.DatingStatu
 
 	// Redis keys for tracking swipes for the current day
 	swipesCountKey := fmt.Sprintf("swipes_count:%s:%s", req.UserID, date)
-	swipesProfilesKey := fmt.Sprintf("swipes_profiles:%s:%s", req.UserID, date)
+	swipesProfilesKey := fmt.Sprintf("swipes_profiles:%s:%s", req.UserID, req.ProfileID)
 
 	// Check if the swipe count key exists, if not, create it with a default value of 0
 	swipesCountStr, err := c.cache.GetCacheObject(ctx, swipesCountKey)
@@ -200,6 +200,7 @@ func (c *Core) Swipe(ctx context.Context, req *models.Swipe) (status.DatingStatu
 		// If the key doesn't exist, initialize the swipe count to 0
 		err := c.cache.SetCacheObject(ctx, swipesCountKey, "0", 24*time.Hour)
 		if err != nil {
+			c.log.Error("failed swipe tracking", err)
 			return status.SystemErrCode_FailedSwipeTracking, err
 		}
 		swipesCountStr = "0" // No swipes so far today, so it's 0
@@ -208,6 +209,7 @@ func (c *Core) Swipe(ctx context.Context, req *models.Swipe) (status.DatingStatu
 	// Convert swipe count to integer
 	swipesCount, err := strconv.Atoi(swipesCountStr)
 	if err != nil {
+		c.log.Error("failed convert count tracking", err)
 		return status.SystemErrCode_FailedParseSwipe, err
 	}
 
@@ -228,6 +230,7 @@ func (c *Core) Swipe(ctx context.Context, req *models.Swipe) (status.DatingStatu
 	// Add the profile ID to the set of profiles swiped by the user today
 	err = c.cache.SetCacheObject(ctx, swipesProfilesKey, req.ProfileID, 24*time.Hour)
 	if err != nil {
+		c.log.Error("failed cache swiped profile", err)
 		return status.SystemErrCode_FailedSwipeAddingProfile, err
 	}
 
@@ -235,6 +238,7 @@ func (c *Core) Swipe(ctx context.Context, req *models.Swipe) (status.DatingStatu
 	swipesCount++
 	err = c.cache.SetCacheObject(ctx, swipesCountKey, fmt.Sprintf("%d", swipesCount), 24*time.Hour)
 	if err != nil {
+		c.log.Error("failed cache swiped count profile", err)
 		return status.SystemErrCode_FailedSwipeUpdatingSwipeCount, err
 	}
 
@@ -245,21 +249,18 @@ func (c *Core) Swipe(ctx context.Context, req *models.Swipe) (status.DatingStatu
 	expiration := getNextMidnight() // Calculate the time until midnight
 	err = c.cache.RenewCacheObjectTimeout(ctx, swipesCountKey, expiration.Sub(time.Now()))
 	if err != nil {
-		return status.SystemErrCode_FailedSwipeSettingExpire, err
-	}
-
-	err = c.cache.RenewCacheObjectTimeout(ctx, swipesProfilesKey, expiration.Sub(time.Now()))
-	if err != nil {
+		c.log.Error("failed renew cache swiped profile", err)
 		return status.SystemErrCode_FailedSwipeSettingExpire, err
 	}
 
 	// Store the swipe in the database
-	_, err = c.storage.CreateSwipe(ctx, &models.Swipe{
-		UserID:    req.UserID,
-		ProfileID: req.ProfileID,
-		Direction: req.Direction,
-	})
+	swipeRecord := models.NewSwipe()
+	swipeRecord.UserID = req.UserID
+	swipeRecord.ProfileID = req.ProfileID
+	swipeRecord.Direction = req.Direction
+	_, err = c.storage.CreateSwipe(ctx, swipeRecord)
 	if err != nil {
+		c.log.Error("failed store swipe log", err)
 		return status.SystemErrCode_FailedStoreData, err
 	}
 
