@@ -11,8 +11,10 @@ import (
 
 	"github.com/deasdania/dating-app/config"
 	"github.com/deasdania/dating-app/core"
+	"github.com/deasdania/dating-app/status"
 	"github.com/deasdania/dating-app/storage/models"
 	ps "github.com/deasdania/dating-app/storage/postgresql"
+	"github.com/deasdania/dating-app/storage/redis"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -57,6 +59,7 @@ type API struct {
 	Validate *validator.Validate
 	Config   *viper.Viper
 	Storage  *ps.Storage
+	RC       *redis.RedisConnection
 }
 
 type middlewareManager struct {
@@ -71,6 +74,8 @@ type CoreI interface {
 	SetProfile(ctx context.Context, userID *uuid.UUID, profile *models.Profile) (bool, error)
 	GetPeopleProfiles(ctx context.Context, page, limit uint) ([]*models.Profile, error)
 	GetPeopleProfileByID(ctx context.Context, profileID *uuid.UUID) (*models.Profile, error)
+
+	Swipe(ctx context.Context, req *models.Swipe) (status.DatingStatusCode, error)
 }
 
 func (b *API) v1(e *echo.Echo, um *core.Core, mm *middlewareManager) {
@@ -92,6 +97,7 @@ func Bootstrap(api *API) {
 	coreAPI := core.NewCore(
 		api.Log,
 		api.Storage,
+		api.RC,
 		timeoutContext,
 		secret,
 	)

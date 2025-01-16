@@ -8,6 +8,7 @@ import (
 	"github.com/deasdania/dating-app/handlers"
 	"github.com/deasdania/dating-app/storage/postgresql"
 	"github.com/deasdania/dating-app/storage/postgresutil"
+	"github.com/deasdania/dating-app/storage/redis"
 	"github.com/faiface/mainthread"
 	"github.com/jmoiron/sqlx"
 	"github.com/sirupsen/logrus"
@@ -114,6 +115,22 @@ func runServer() {
 	// Log after database initialization
 	logger.Info("PostgreSQL storage initialized successfully.")
 
+	redisConfig := redis.Config{
+		Host:     config.GetString("redis.host"),
+		Port:     config.GetInt("redis.port"),
+		Password: config.GetString("redis.password"),
+		Database: config.GetInt("redis.database"),
+		Timeout:  config.GetDuration("redis.timeout"),
+		SSL:      config.GetBool("redis.ssl"),
+	}
+
+	rc, err := redis.NewRedisConnection(redisConfig)
+	if err != nil {
+		logger.Fatalf("error connecting to Redis: %v", err)
+	}
+	defer rc.Cl.Close()
+	logger.Info("successfully connected to the Redis!")
+
 	appEnvStr := config.GetString("server.appEnv")
 	logger.Info("appEnv:", appEnvStr)
 
@@ -130,6 +147,7 @@ func runServer() {
 		Validate: validate.Validator,
 		Config:   config,
 		Storage:  store,
+		RC:       rc,
 	})
 	logger.Info("Handlers bootstrap completed.")
 

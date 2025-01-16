@@ -11,7 +11,7 @@ import (
 )
 
 // Helper function to handle request binding, validation, and response
-func (h *Handlers) handleRequest(c echo.Context, user *smodels.User) error {
+func (h *Handlers) handleRequestUser(c echo.Context, user *smodels.User) error {
 	// Bind the request data into the user struct
 	if err := c.Bind(user); err != nil {
 		c.JSON(http.StatusBadRequest, models.NewResponseError(http.StatusBadRequest, status.UserErrCode_InvalidRequest, err.Error()))
@@ -33,7 +33,7 @@ func (h *Handlers) SignUp(c echo.Context) error {
 	var user smodels.User
 
 	// Use the helper function to handle binding and validation
-	if err := h.handleRequest(c, &user); err != nil {
+	if err := h.handleRequestUser(c, &user); err != nil {
 		return err // The error response is already handled in the helper function
 	}
 
@@ -54,7 +54,7 @@ func (h *Handlers) Login(c echo.Context) error {
 	var user smodels.User
 
 	// Use the helper function to handle binding and validation
-	if err := h.handleRequest(c, &user); err != nil {
+	if err := h.handleRequestUser(c, &user); err != nil {
 		return err // The error response is already handled in the helper function
 	}
 

@@ -19,7 +19,7 @@ import (
 
 // Helper to log and return errors with a standard response
 func (h *Handlers) RespondWithError(c echo.Context, statusCode int64, errCode status.DatingStatusCode, errMsg string) error {
-	h.log.Error(fmt.Sprintf("Error [%s]: %s", errCode, errMsg)) // Log the error with code and message
+	h.log.Errorf("Error [%s]: %s", errCode, errMsg) // Log the error with code and message
 	c.JSON(int(statusCode), models.NewResponseError(statusCode, errCode, errMsg))
 	return nil
 }
@@ -54,7 +54,7 @@ func (h *Handlers) GetProfile(c echo.Context) error {
 	// Extract user ID from token
 	uid, err := h.ExtractUserIDFromToken(c)
 	if err != nil {
-		h.log.Error(fmt.Sprintf("Failed to extract user ID from token: %v", err)) // Log the error
+		h.log.Errorf("Failed to extract user ID from token: %v", err) // Log the error
 		return h.RespondWithError(c, http.StatusUnauthorized, status.UserErrCode_Unauthorized, err.Error())
 	}
 
@@ -62,7 +62,7 @@ func (h *Handlers) GetProfile(c echo.Context) error {
 	ctx := c.Request().Context()
 	profile, err := h.core.GetProfile(ctx, uid)
 	if err != nil {
-		h.log.Error(fmt.Sprintf("Error fetching profile for user ID %v: %v", uid, err)) // Log the error with context
+		h.log.Errorf("Error fetching profile for user ID %v: %v", uid, err) // Log the error with context
 		return h.RespondWithError(c, http.StatusInternalServerError, status.SystemErrCode_Generic, err.Error())
 	}
 
@@ -73,19 +73,19 @@ func (h *Handlers) GetProfile(c echo.Context) error {
 func (h *Handlers) SetProfile(c echo.Context) error {
 	var profile smodels.Profile
 	if err := c.Bind(&profile); err != nil {
-		h.log.Error(fmt.Sprintf("Failed to bind profile data: %v", err)) // Log binding error
+		h.log.Errorf("Failed to bind profile data: %v", err) // Log binding error
 		return h.RespondWithError(c, http.StatusBadRequest, status.UserErrCode_InvalidRequest, err.Error())
 	}
 
 	if err := validateStruct(h.validate, profile); err != nil {
-		h.log.Error(fmt.Sprintf("Validation error for profile: %v", err)) // Log validation error
+		h.log.Errorf("Validation error for profile: %v", err) // Log validation error
 		return h.RespondWithError(c, http.StatusBadRequest, status.UserErrCode_InvalidRequest, err.Error())
 	}
 
 	// Extract user ID from token
 	uid, err := h.ExtractUserIDFromToken(c)
 	if err != nil {
-		h.log.Error(fmt.Sprintf("Failed to extract user ID from token: %v", err)) // Log the error
+		h.log.Errorf("Failed to extract user ID from token: %v", err) // Log the error
 		return h.RespondWithError(c, http.StatusUnauthorized, status.UserErrCode_Unauthorized, err.Error())
 	}
 
@@ -93,7 +93,7 @@ func (h *Handlers) SetProfile(c echo.Context) error {
 	ctx := c.Request().Context()
 	isNew, err := h.core.SetProfile(ctx, uid, &profile)
 	if err != nil {
-		h.log.Error(fmt.Sprintf("Error setting profile for user ID %v: %v", uid, err)) // Log the error with context
+		h.log.Errorf("Error setting profile for user ID %v: %v", uid, err) // Log the error with context
 		return h.RespondWithError(c, http.StatusInternalServerError, status.SystemErrCode_Generic, err.Error())
 	}
 
@@ -110,7 +110,7 @@ func (h *Handlers) GetPeopleProfiles(c echo.Context) error {
 	// Extract user ID from token (optional in this case, but you can validate it)
 	_, err := h.ExtractUserIDFromToken(c)
 	if err != nil {
-		h.log.Error(fmt.Sprintf("Failed to extract user ID from token: %v", err)) // Log the error
+		h.log.Errorf("Failed to extract user ID from token: %v", err) // Log the error
 		return h.RespondWithError(c, http.StatusUnauthorized, status.UserErrCode_Unauthorized, err.Error())
 	}
 
@@ -126,7 +126,7 @@ func (h *Handlers) GetPeopleProfiles(c echo.Context) error {
 	if pageStr != "" {
 		parsedPage, err := strconv.ParseUint(pageStr, 10, 32) // Parse as uint
 		if err != nil {
-			h.log.Error(fmt.Sprintf("Invalid page value: %v", err)) // Log error
+			h.log.Errorf("Invalid page value: %v", err) // Log error
 			return h.RespondWithError(c, http.StatusBadRequest, status.UserErrCode_InvalidRequest, "Invalid page parameter")
 		}
 		page = uint(parsedPage) // Store the parsed value
@@ -136,7 +136,7 @@ func (h *Handlers) GetPeopleProfiles(c echo.Context) error {
 	if limitStr != "" {
 		parsedLimit, err := strconv.ParseUint(limitStr, 10, 32) // Parse as uint
 		if err != nil {
-			h.log.Error(fmt.Sprintf("Invalid limit value: %v", err)) // Log error
+			h.log.Errorf("Invalid limit value: %v", err) // Log error
 			return h.RespondWithError(c, http.StatusBadRequest, status.UserErrCode_InvalidRequest, "Invalid limit parameter")
 		}
 		limit = uint(parsedLimit) // Store the parsed value
@@ -148,7 +148,7 @@ func (h *Handlers) GetPeopleProfiles(c echo.Context) error {
 	ctx := c.Request().Context()
 	profiles, err := h.core.GetPeopleProfiles(ctx, page, limit)
 	if err != nil {
-		h.log.Error(fmt.Sprintf("Error fetching profiles with page %s and limit %s: %v", page, limit, err)) // Log the error with pagination context
+		h.log.Errorf("Error fetching profiles with page %d and limit %d: %v", page, limit, err) // Log the error with pagination context
 		return h.RespondWithError(c, http.StatusInternalServerError, status.SystemErrCode_Generic, err.Error())
 	}
 
@@ -160,7 +160,7 @@ func (h *Handlers) GetPeopleProfileByID(c echo.Context) error {
 	// Extract user ID from token
 	_, err := h.ExtractUserIDFromToken(c)
 	if err != nil {
-		h.log.Error(fmt.Sprintf("Failed to extract user ID from token: %v", err)) // Log the error
+		h.log.Errorf("Failed to extract user ID from token: %v", err) // Log the error
 		return h.RespondWithError(c, http.StatusUnauthorized, status.UserErrCode_Unauthorized, err.Error())
 	}
 
@@ -173,7 +173,7 @@ func (h *Handlers) GetPeopleProfileByID(c echo.Context) error {
 
 	profileUID, err := uuid.Parse(profileID)
 	if err != nil {
-		h.log.Error(fmt.Sprintf("Invalid profile ID format: %v", err)) // Log the error
+		h.log.Errorf("Invalid profile ID format: %v", err) // Log the error
 		return h.RespondWithError(c, http.StatusBadRequest, status.UserErrCode_InvalidRequest, "Invalid profile ID")
 	}
 
@@ -182,10 +182,10 @@ func (h *Handlers) GetPeopleProfileByID(c echo.Context) error {
 	profile, err := h.core.GetPeopleProfileByID(ctx, &profileUID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			h.log.Error(fmt.Sprintf("Profile not found for ID %v: %v", profileUID, err)) // Log if profile is not found
+			h.log.Errorf("Profile not found for ID %v: %v", profileUID, err) // Log if profile is not found
 			return h.RespondWithError(c, http.StatusNotFound, status.UserErrCode_ProfileNotFound, "Profile not found")
 		}
-		h.log.Error(fmt.Sprintf("Error fetching profile by ID %v: %v", profileUID, err)) // Log the error with profile ID context
+		h.log.Errorf("Error fetching profile by ID %v: %v", profileUID, err) // Log the error with profile ID context
 		return h.RespondWithError(c, http.StatusInternalServerError, status.SystemErrCode_Generic, err.Error())
 	}
 

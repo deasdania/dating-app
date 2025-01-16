@@ -20,4 +20,12 @@ secret="4f8369c632ca017a53705139f52804f0102e767768617832eb77ff07206c5901"
 [server]
 logLevel="fromenv"
 appEnv="development"
-address=":8080
+address=":8080"
+
+[redis]
+host="localhost"
+port="6379"
+password=""
+database=""
+timeout="10s"
+ssl="false"
