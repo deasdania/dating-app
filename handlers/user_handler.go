@@ -64,7 +64,7 @@ func (h *Handlers) Login(c echo.Context) error {
 	}
 
 	// validate username and password values
-	if user.Username == "" || user.Password == "" || user.Email == "" {
+	if user.Username == "" || user.Password == "" {
 		c.JSON(http.StatusBadRequest, models.NewResponseError(http.StatusBadRequest, status.UserErrCode_RequestUsernamePassword, ""))
 		return nil
 	}

@@ -33,23 +33,28 @@ const (
 
 	getProfileQuery = `
 		SELECT 
-			id,
+			profiles.id,
 			user_id,
-			username,
+			profiles.username,
 			COALESCE(description, '') AS description,
-			COALESCE(image_url, '') AS image_url,created_at,
-			updated_at
+			COALESCE(image_url, '') AS image_url,
+			is_premium,
+			verified,
+			profiles.created_at,
+			profiles.updated_at
 		FROM 
 			profiles
+		LEFT JOIN 
+			users on users.id = profiles.user_id
 	`
 
 	// Profile Filter Clauses
-	profileIDClause        = ` id = :id`
-	profileUserIDClause    = ` user_id = :user_id`
-	usernameProfileClause  = ` username = :username`
-	imageURLClause         = ` image_url = :image_url`
-	createdAtProfileClause = ` created_at = :created_at`
-	updatedAtProfileClause = ` updated_at = :updated_at`
+	profileIDClause        = ` profiles.id = :id`
+	profileUserIDClause    = ` profiles.user_id = :user_id`
+	usernameProfileClause  = ` profiles.username = :username`
+	imageURLClause         = ` profiles.image_url = :image_url`
+	createdAtProfileClause = ` profiles.created_at = :created_at`
+	updatedAtProfileClause = ` profiles.updated_at = :updated_at`
 )
 
 func (s *Storage) CreateProfile(ctx context.Context, profile *models.Profile) (*uuid.UUID, error) {
@@ -104,6 +109,8 @@ func (s *Storage) GetProfiles(ctx context.Context, opts ...models.ProfileFilterO
 			&profile.Username,
 			&profile.Description,
 			&profile.ImageURL,
+			&profile.IsPremium,
+			&profile.Verified,
 			&profile.CreatedAt,
 			&profile.UpdatedAt,
 		)

@@ -108,6 +108,7 @@ func Bootstrap(api *API) {
 		api.RC,
 		timeoutContext,
 		secret,
+		api.Config.GetInt("access_token.timeout"), // in minutes e.g 60 mean 60 minutes
 	)
 
 	jwtAuthMiddleware := config.InitJWTAuthMiddleware(api.Config.GetString("access_token.secret"))

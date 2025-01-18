@@ -14,6 +14,10 @@ type Profile struct {
 	ImageURL    string    `json:"image_url" db:"image_url"`
 	CreatedAt   time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at" db:"updated_at"`
+
+	// to show premium and verified flag from users table
+	IsPremium bool `json:"is_premium" db:"is_premium"`
+	Verified  bool `json:"verified" db:"verified"`
 }
 
 type ProfileFilter struct {

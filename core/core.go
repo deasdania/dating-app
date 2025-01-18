@@ -25,18 +25,20 @@ type Core struct {
 	cache   *redis.RedisConnection
 	td      time.Duration
 	secret  string
+	timeout int
 }
 
 const randomListgenerating = 10
 
 // NewCore will create new a Core object representation of ICore interface
-func NewCore(log *logrus.Entry, storage ps.IStore, cache *redis.RedisConnection, td time.Duration, secret string) *Core {
+func NewCore(log *logrus.Entry, storage ps.IStore, cache *redis.RedisConnection, td time.Duration, secret string, timeout int) *Core {
 	return &Core{
 		log:     log,
 		storage: storage,
 		cache:   cache,
 		td:      td,
 		secret:  secret,
+		timeout: timeout,
 	}
 }
 
@@ -91,7 +93,7 @@ func (c *Core) checkPassword(hashedPassword, password string) error {
 func (c *Core) generateJWTToken(userID string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":  userID, // Store the UUID as a string in the token
-		"exp": time.Now().Add(time.Hour * 24).Unix(),
+		"exp": time.Now().Add(time.Minute * time.Duration(c.timeout)).Unix(),
 	})
 
 	tokenString, err := token.SignedString([]byte(c.secret))
