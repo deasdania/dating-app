@@ -5,10 +5,14 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"strings"
 
 	"github.com/google/uuid"
 	_ "github.com/lib/pq"
+	"github.com/spf13/viper"
 	"golang.org/x/crypto/bcrypt"
+
+	ps "github.com/deasdania/dating-app/storage/postgresutil"
 )
 
 const (
@@ -17,8 +21,31 @@ const (
 
 func main() {
 	// Connect to your PostgreSQL database (make sure you have the correct connection details)
-	// connStr := "postgres://username:password@localhost:5432/database_name?sslmode=disable"
-	connStr := "postgres://postgres:secret@localhost:5432/dating_app?sslmode=disable"
+	config := viper.NewWithOptions(
+		viper.EnvKeyReplacer(
+			strings.NewReplacer(".", "_"),
+		),
+	)
+	config.SetConfigFile("../env/config")
+	config.SetConfigType("ini")
+	config.AutomaticEnv()
+	if err := config.ReadInConfig(); err != nil {
+		log.Fatalf("error loading configuration: %v", err)
+	}
+	var allConfig struct {
+		Database ps.DBConfig `mapstructure:"database"`
+	}
+	if err := config.Unmarshal(&allConfig); err != nil {
+		log.Fatalf("cannot unmarshal db config: %v", err)
+	}
+
+	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		allConfig.Database.User,
+		allConfig.Database.Password,
+		allConfig.Database.Host,
+		allConfig.Database.Port,
+		allConfig.Database.DBName,
+	)
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)

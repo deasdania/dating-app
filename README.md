@@ -11,10 +11,25 @@
   - **Caching**: Redis (for fast lookup of swipe limits, etc.)
   - **Authentication**: JWT for secure and stateless login sessions
   
+## The structure of the service
+- **config**: Application settings and configuration.
+- **core**: Core business logic and models.
+- **env**: Environment-specific settings.
+- **go**.mod & go.sum: Go dependency management.
+- **handlers**: HTTP handlers for API routes.
+- **main**.go: Entry point of the application.
+- **migrations**: SQL migration files for DB schema changes.
+- **models**: Database models and related logic.
+- **routes**.json: Route definitions for URL handling.
+- **seeds**: Initial or mock data seeding for the database.
+- **status**: Status codes or enums related to business logic.
+- **storage**: Database and caching logic (PostgreSQL, Redis).
+- **tests**: Tests for the application, including e2e tests(TBC).
+- **utils**: Utility functions for common tasks.
 
-## Database 
+## Instructions on how to run the service
 
-### Postgres 
+### Prepare the postgres 
 
 create a new postgres db locally before run the application.
 
@@ -36,8 +51,8 @@ goose -dir migrations postgres "user=postgres password=secret dbname=dating_app 
 This command will apply the migrations to your database.
 
 ---
-
-####  How to Rollback Migrations
+#### Development notes
+#####  How to Rollback Migrations
 
 To rollback migrations, navigate to the `migrations` directory and run:
 
@@ -50,7 +65,7 @@ This command will roll back the most recent migration.
 
 ---
 
-#### How to Add a New Migration File
+##### How to Add a New Migration File
 
 To create a new migration file, run the following command:
 
@@ -63,7 +78,7 @@ This will create a new migration file with a timestamp and a name of your choosi
 
 ---
 
-### Using Redis
+### Prepare the Redis
 
 #### Running Redis with Docker
 
@@ -88,20 +103,15 @@ docker run -d --name redis-stack -p 8001:8001 redis/redis-stack:latest
 ```bash
 docker exec -t redis-stack redis-cli
 ```
+---
+## Setting The ENV
 
-### Setting Redis Connection
-
-To set the Redis connection, export the `REDIS_CONNECTION` environment variable:
-
-```bash
-export REDIS_CONNECTION=redis://localhost:6379
-```
-
-This allows your application to connect to the Redis server running on `localhost:6379`.
+copy the  `env/sample.config` and rename to `config`
+adjust the env values with your values, you can't run the seeds, before setting up this env
 
 ---
 
-## How to Run the Seeds
+## Run the seeds
 
 To run the database seeders, navigate to the `seeds` directory and execute the following command:
 
@@ -113,6 +123,19 @@ go run main.go
 This will populate your database with initial data.
 
 ---
+
+### Setting The ENV
+
+copy the  `env/sample.config` and rename to `config`
+adjust the env values with your values
+
+---
+
+# RUN THE APP 
+to the root project and run this command below:
+```bash
+go run main.go
+```
 
 ### Summary of Commands:
 
