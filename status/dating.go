@@ -65,7 +65,7 @@ var datingMap = map[DatingStatusCode]StatusResponse{
 	UserErrCode_InvalidRequestDirectionRequired: {StatusDesc: "direction is required ('left' or 'right')"},
 	UserErrCode_NotFoundDating:                  {StatusDesc: "not found dating"},
 	UserErrCode_ProfileNotFound:                 {StatusDesc: "profile not found"},
-	UserErrCode_AlreadySwiped:                   {StatusDesc: "profile already swipped today"},
+	UserErrCode_AlreadySwiped:                   {StatusDesc: "profile already swiped today"},
 	UserErrCode_ReachDailyLimit:                 {StatusDesc: "you have reached your daily swipe limit."},
 	UserErrCode_InvalidRequestPremiumPackage:    {StatusDesc: "type is required ('remove_quota' or 'verified_label')"},
 	UserErrCode_EmailIsTaken:                    {StatusDesc: "email is already taken"},
@@ -92,6 +92,6 @@ var datingMap = map[DatingStatusCode]StatusResponse{
 	SystemErrCode_FailedSwipeSettingExpire:      {StatusDesc: "error setting expiration for swipes key: %v"},
 	SystemErrCode_FailedGenerateHashedPassword:  {StatusCode: "Failed generate hashed password"},
 	SystemErrCode_FailedCreateUser:              {StatusCode: "Failed create a user"},
-	SystemErrCode_FailedCompareHashPassword:     {StatusCode: "Failed compare hashed password"},
+	SystemErrCode_FailedCompareHashPassword:     {StatusCode: "Invalid password"},
 	SystemErrCode_FailedGenerateJWTToken:        {StatusCode: "Failed generate jwt token"},
 }

@@ -1,0 +1,287 @@
+{
+	"info": {
+		"_postman_id": "e5606176-92cf-4f7e-9213-129ee168a031",
+		"name": "dating-app",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "38917015"
+	},
+	"item": [
+		{
+			"name": "signup",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"jane_doe_\",\n    \"password\": \"password123\",\n    \"email\": \"jane_doe_@example.com\"\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}/v1/signup",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"v1",
+						"signup"
+					]
+				},
+				"description": "Generated from cURL: curl -X POST http://localhost:8080/signup \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"username\": \"john_doe\",\n    \"password\": \"password123\",\n    \"email\": \"john_doe@example.com\"\n  }'\n"
+			},
+			"response": []
+		},
+		{
+			"name": "login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Check if the response contains the token field",
+							"if (pm.response.code === 200) {",
+							"    // Parse the response body as JSON",
+							"    var responseJson = pm.response.json();",
+							"",
+							"    // Get the token from the response body",
+							"    var token = responseJson.token;",
+							"",
+							"    // Set the token as an environment variable",
+							"    pm.environment.set(\"token\", token);",
+							"",
+							"    // Log to verify it's correctly set",
+							"    console.log(\"Token set:\", token);",
+							"} else {",
+							"    console.log(\"Failed to retrieve token.\");",
+							"}",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"john_doe\",\n    \"password\": \"password123\"\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}/v1/login",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"v1",
+						"login"
+					]
+				},
+				"description": "Generated from cURL: curl -X POST http://localhost:8080/login \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"username\": \"john_doe\",\n    \"password\": \"password123\"\n  }'\n"
+			},
+			"response": []
+		},
+		{
+			"name": "profile",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "{{baseURL}}/v1/profile",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"v1",
+						"profile"
+					]
+				},
+				"description": "Generated from cURL: curl -X GET http://localhost:8080/profile \\\n  -H \"Authorization: Bearer your_jwt_token_here\"\n"
+			},
+			"response": []
+		},
+		{
+			"name": "profiles",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "{{baseURL}}/v1/profiles?page=1&limit=5",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"v1",
+						"profiles"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "limit",
+							"value": "5"
+						}
+					]
+				},
+				"description": "Generated from cURL: curl -X GET http://localhost:8080/profile \\\n  -H \"Authorization: Bearer your_jwt_token_here\"\n"
+			},
+			"response": []
+		},
+		{
+			"name": "profile by ID",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "{{baseURL}}/v1/profiles/:id",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"v1",
+						"profiles",
+						":id"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": ""
+						}
+					]
+				},
+				"description": "Generated from cURL: curl -X GET http://localhost:8080/profile \\\n  -H \"Authorization: Bearer your_jwt_token_here\"\n"
+			},
+			"response": []
+		},
+		{
+			"name": "profile",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"description\": \"a profile description\",\n    \"image_url\": \"www.google.com\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}/v1/profile",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"v1",
+						"profile"
+					]
+				},
+				"description": "Generated from cURL: curl -X GET http://localhost:8080/profile \\\n  -H \"Authorization: Bearer your_jwt_token_here\"\n"
+			},
+			"response": []
+		},
+		{
+			"name": "swipe",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"profile_id\": \"833bf050-4eeb-45fe-a6b1-b372631ebddd\",\n    \"direction\": \"right\"\n  }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}/v1/swipe",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"v1",
+						"swipe"
+					]
+				},
+				"description": "Generated from cURL: curl -X POST http://localhost:8080/swipe \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Authorization: Bearer your_jwt_token_here\" \\\n  -d '{\n    \"profile_id\": \"some-uuid\",\n    \"direction\": \"like\"\n  }'\n"
+			},
+			"response": []
+		},
+		{
+			"name": "premium",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "{{baseURL}}/v1/premium",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"v1",
+						"premium"
+					]
+				},
+				"description": "Generated from cURL: curl -X POST http://localhost:8080/premium \\\n  -H \"Authorization: Bearer your_jwt_token_here\"\n"
+			},
+			"response": []
+		}
+	]
+}

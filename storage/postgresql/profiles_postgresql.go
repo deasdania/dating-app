@@ -34,12 +34,12 @@ const (
 	getProfileQuery = `
 		SELECT 
 			profiles.id,
-			user_id,
+			profiles.user_id,
 			profiles.username,
-			COALESCE(description, '') AS description,
-			COALESCE(image_url, '') AS image_url,
-			is_premium,
-			verified,
+			COALESCE(profiles.description, '') AS description,
+			COALESCE(profiles.image_url, '') AS image_url,
+			users.is_premium,
+			users.verified,
 			profiles.created_at,
 			profiles.updated_at
 		FROM 
@@ -49,12 +49,12 @@ const (
 	`
 
 	// Profile Filter Clauses
-	profileIDClause        = ` profiles.id = :id`
-	profileUserIDClause    = ` profiles.user_id = :user_id`
-	usernameProfileClause  = ` profiles.username = :username`
-	imageURLClause         = ` profiles.image_url = :image_url`
-	createdAtProfileClause = ` profiles.created_at = :created_at`
-	updatedAtProfileClause = ` profiles.updated_at = :updated_at`
+	profileIDClause        = ` profiles.id = :profiles_id`
+	profileUserIDClause    = ` profiles.user_id = :profiles_user_id`
+	usernameProfileClause  = ` profiles.username = :profiles_username`
+	imageURLClause         = ` profiles.image_url = :profiles_image_url`
+	createdAtProfileClause = ` profiles.created_at = :profiles_created_at`
+	updatedAtProfileClause = ` profiles.updated_at = :profiles_updated_at`
 )
 
 func (s *Storage) CreateProfile(ctx context.Context, profile *models.Profile) (*uuid.UUID, error) {
@@ -133,27 +133,27 @@ func buildProfileFilter(filter *models.ProfileFilter) (string, map[string]interf
 
 	if filter.ID != nil {
 		query = addQueryString(query, profileIDClause)
-		params["id"] = filter.ID
+		params["profiles_id"] = filter.ID
 	}
 	if filter.UserID != nil {
 		query = addQueryString(query, profileUserIDClause)
-		params["user_id"] = filter.UserID
+		params["profiles_user_id"] = filter.UserID
 	}
 	if filter.Username != "" {
 		query = addQueryString(query, usernameProfileClause)
-		params["username"] = filter.Username
+		params["profiles_username"] = filter.Username
 	}
 	if filter.ImageURL != "" {
 		query = addQueryString(query, imageURLClause)
-		params["image_url"] = filter.ImageURL
+		params["profiles_image_url"] = filter.ImageURL
 	}
 	if filter.CreatedAt != nil {
 		query = addQueryString(query, createdAtProfileClause)
-		params["created_at"] = filter.CreatedAt
+		params["profiles_created_at"] = filter.CreatedAt
 	}
 	if filter.UpdatedAt != nil {
 		query = addQueryString(query, updatedAtProfileClause)
-		params["updated_at"] = filter.UpdatedAt
+		params["profiles_updated_at"] = filter.UpdatedAt
 	}
 
 	// Exclude profile IDs if they're provided (handling slice of pointers)
@@ -165,7 +165,7 @@ func buildProfileFilter(filter *models.ProfileFilter) (string, map[string]interf
 				ids += ","
 			}
 		}
-		query = addQueryString(query, fmt.Sprintf("id NOT IN (%s)", ids))
+		query = addQueryString(query, fmt.Sprintf("profiles.id NOT IN (%s)", ids))
 	}
 
 	// Handle pagination: Page and Limit

@@ -44,8 +44,12 @@ func (h *Handlers) SignUp(c echo.Context) error {
 		c.JSON(http.StatusBadRequest, models.NewResponseError(http.StatusBadRequest, status.UserErrCode_RequestUsernamePasswordEmail, ""))
 		return nil
 	}
-	if status, err := h.Core.SignUp(ctx, &user); err != nil {
-		c.JSON(http.StatusInternalServerError, models.NewResponseError(http.StatusInternalServerError, status, err.Error()))
+	if st, err := h.Core.SignUp(ctx, &user); err != nil {
+		if st == status.UserErrCode_EmailIsTaken || st == status.UserErrCode_UsernameIsTaken {
+			c.JSON(http.StatusInternalServerError, models.NewResponseError(http.StatusBadRequest, st, err.Error()))
+			return err
+		}
+		c.JSON(http.StatusInternalServerError, models.NewResponseError(http.StatusInternalServerError, st, err.Error()))
 		return err
 	}
 
@@ -70,9 +74,13 @@ func (h *Handlers) Login(c echo.Context) error {
 	}
 	// Call core.Login to log the user in and get the token
 	ctx := c.Request().Context()
-	status, token, err := h.Core.Login(ctx, &user)
+	st, token, err := h.Core.Login(ctx, &user)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, models.NewResponseError(http.StatusInternalServerError, status, err.Error()))
+		if st == status.SystemErrCode_FailedCompareHashPassword {
+			c.JSON(http.StatusBadRequest, models.NewResponseError(http.StatusBadRequest, status.SystemErrCode_FailedCompareHashPassword, ""))
+			return err
+		}
+		c.JSON(http.StatusInternalServerError, models.NewResponseError(http.StatusInternalServerError, st, err.Error()))
 		return err
 	}
 
