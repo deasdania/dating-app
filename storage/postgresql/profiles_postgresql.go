@@ -15,7 +15,6 @@ const (
 	// Profile Queries
 	createProfileQuery = `
 		INSERT INTO profiles (
-			id,
 			user_id,
 			username,
 			description,
@@ -23,7 +22,6 @@ const (
 			created_at,
 			updated_at
 		) VALUES (
-			:id,
 			:user_id,
 			:username,
 			:description,

@@ -11,6 +11,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+const (
+	USER_ID_TEST = "d5dba9f0-2daf-47d3-9763-f98b1ea25376"
+)
+
 func main() {
 	// Connect to your PostgreSQL database (make sure you have the correct connection details)
 	// connStr := "postgres://username:password@localhost:5432/database_name?sslmode=disable"
@@ -44,6 +48,15 @@ func main() {
 		}
 		fmt.Printf("Inserted user: %s\n", username)
 	}
+	// e2e needed
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte("Password123"), bcrypt.DefaultCost)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = db.Exec(`
+			INSERT INTO users (id, username, email, password, is_premium, verified)
+			VALUES ($1, $2, $3, $4, $5, $6)`,
+		USER_ID_TEST, "testuser", "testuser@example.com", hashedPassword, 0, 0)
 
 	fmt.Println("Seed data insertion complete.")
 }

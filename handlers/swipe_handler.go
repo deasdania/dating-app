@@ -20,8 +20,8 @@ func (h *Handlers) handleRequestSwipe(c echo.Context, swipe *smodels.Swipe) erro
 	}
 
 	// Validate the struct
-	if err := validateStruct(h.validate, *swipe); err != nil {
-		h.log.Error("Validation error:", err)
+	if err := validateStruct(h.Validate, *swipe); err != nil {
+		h.Log.Error("Validation error:", err)
 		c.JSON(http.StatusBadRequest, models.NewResponseError(http.StatusBadRequest, status.UserErrCode_InvalidRequest, err.Error()))
 		return err
 	}
@@ -55,12 +55,12 @@ func (h *Handlers) Swipe(c echo.Context) error {
 	// Extract user ID from token
 	uid, err := h.ExtractUserIDFromToken(c)
 	if err != nil {
-		h.log.Error(fmt.Sprintf("Failed to extract user ID from token: %v", err)) // Log the error
+		h.Log.Error(fmt.Sprintf("Failed to extract user ID from token: %v", err)) // Log the error
 		return h.RespondWithError(c, http.StatusUnauthorized, status.UserErrCode_Unauthorized, err.Error())
 	}
 	swipe.UserID = uid
 
-	status, err := h.core.Swipe(ctx, &swipe)
+	status, err := h.Core.Swipe(ctx, &swipe)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.NewResponseError(http.StatusInternalServerError, status, err.Error()))
 		return err

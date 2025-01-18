@@ -24,23 +24,23 @@ import (
 )
 
 type Handlers struct {
-	app      *echo.Echo
-	log      *logrus.Entry
-	validate *validator.Validate
-	config   *viper.Viper
-	core     CoreI
-	secret   string
+	App      *echo.Echo
+	Log      *logrus.Entry
+	Validate *validator.Validate
+	Config   *viper.Viper
+	Core     CoreI
+	Secret   string
 }
 
 func NewHandlers(
 	app *echo.Echo, log *logrus.Entry, secret string, v1GroupNoAuth *echo.Group, v1GroupAuth *echo.Group, validate *validator.Validate, config *viper.Viper, core CoreI) {
 	handler := &Handlers{
-		app:      app,
-		log:      log,
-		validate: validate,
-		config:   config,
-		core:     core,
-		secret:   secret,
+		App:      app,
+		Log:      log,
+		Validate: validate,
+		Config:   config,
+		Core:     core,
+		Secret:   secret,
 	}
 	// Public routes - No authentication required
 	v1GroupNoAuth.POST("/signup", handler.SignUp) // Register a new user

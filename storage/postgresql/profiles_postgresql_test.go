@@ -18,9 +18,7 @@ func TestStorage_Profile(t *testing.T) {
 	ctx := context.Background()
 
 	// Prepare test data
-	userID := uuid.New()
 	testDataUser := &models.User{
-		ID:        userID,
 		Username:  "testuser",
 		Password:  "securepassword",
 		Email:     "testuser@example.com",
@@ -40,7 +38,7 @@ func TestStorage_Profile(t *testing.T) {
 	profileID := uuid.New()
 	testData := &models.Profile{
 		ID:          profileID,
-		UserID:      testDataUser.ID,
+		UserID:      *got,
 		Username:    "testprofile",
 		Description: "This is a test profile",
 		ImageURL:    "https://example.com/image.jpg",

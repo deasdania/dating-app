@@ -35,7 +35,7 @@ func TestHandlers_RespondWithError(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			h := &Handlers{
-				log: &logrus.Entry{},
+				Log: &logrus.Entry{},
 			}
 			if err := h.RespondWithError(tt.args.c, tt.args.statusCode, tt.args.errCode, tt.args.errMsg); (err != nil) != tt.wantErr {
 				t.Errorf("Handlers.RespondWithError() error = %v, wantErr %v", err, tt.wantErr)

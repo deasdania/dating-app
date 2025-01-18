@@ -14,13 +14,11 @@ const (
 	// Swipe Queries
 	createSwipeQuery = `
 		INSERT INTO swipes (
-			id,
 			user_id,
 			profile_id,
 			direction,
 			created_at
 		) VALUES (
-			:id,
 			:user_id,
 			:profile_id,
 			:direction,

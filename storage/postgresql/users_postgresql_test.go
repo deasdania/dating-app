@@ -18,9 +18,7 @@ func TestStorage_User(t *testing.T) {
 	ctx := context.Background()
 
 	// Prepare test data
-	userID := uuid.New()
 	testData := &models.User{
-		ID:        userID,
 		Username:  "testuser",
 		Password:  "securepassword",
 		Email:     "testuser@example.com",

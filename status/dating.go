@@ -26,7 +26,9 @@ const (
 	UserErrCode_InvalidRequestPremiumPackage    DatingStatusCode = "DAPPSXXX4010"
 	UserErrCode_EmailIsTaken                    DatingStatusCode = "DAPPSXXX4011"
 	UserErrCode_UsernameIsTaken                 DatingStatusCode = "DAPPSXXX4012"
-	UserErrCode_UserNotFound                    DatingStatusCode = "DAPPSXXX40013"
+	UserErrCode_UserNotFound                    DatingStatusCode = "DAPPSXXX4013"
+	UserErrCode_RequestUsernamePassword         DatingStatusCode = "DAPPSXXX4014"
+	UserErrCode_RequestUsernamePasswordEmail    DatingStatusCode = "DAPPSXXX4015"
 
 	SystemErrCode_Generic                       DatingStatusCode = "DAPPSXXX5000"
 	SystemErrCode_FailedReadMetadata            DatingStatusCode = "DAPPSXXX5002"
@@ -69,6 +71,8 @@ var datingMap = map[DatingStatusCode]StatusResponse{
 	UserErrCode_EmailIsTaken:                    {StatusDesc: "email is already taken"},
 	UserErrCode_UsernameIsTaken:                 {StatusDesc: "username is already taken"},
 	UserErrCode_UserNotFound:                    {StatusDesc: "user is not found"},
+	UserErrCode_RequestUsernamePassword:         {StatusDesc: "username and password are required"},
+	UserErrCode_RequestUsernamePasswordEmail:    {StatusDesc: "email, username and password are required"},
 
 	// 5XXX - system errors
 	SystemErrCode_Generic:                       {StatusDesc: "generic system error"},

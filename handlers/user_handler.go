@@ -19,8 +19,8 @@ func (h *Handlers) handleRequestUser(c echo.Context, user *smodels.User) error {
 	}
 
 	// Validate the struct
-	if err := validateStruct(h.validate, *user); err != nil {
-		h.log.Error("Validation error:", err)
+	if err := validateStruct(h.Validate, *user); err != nil {
+		h.Log.Error("Validation error:", err)
 		c.JSON(http.StatusBadRequest, models.NewResponseError(http.StatusBadRequest, status.UserErrCode_InvalidRequest, err.Error()))
 		return err
 	}
@@ -39,7 +39,12 @@ func (h *Handlers) SignUp(c echo.Context) error {
 
 	// Call core.SignUp to register the user
 	ctx := c.Request().Context()
-	if status, err := h.core.SignUp(ctx, &user); err != nil {
+	// validate username and password values
+	if user.Username == "" || user.Password == "" || user.Email == "" {
+		c.JSON(http.StatusBadRequest, models.NewResponseError(http.StatusBadRequest, status.UserErrCode_RequestUsernamePasswordEmail, ""))
+		return nil
+	}
+	if status, err := h.Core.SignUp(ctx, &user); err != nil {
 		c.JSON(http.StatusInternalServerError, models.NewResponseError(http.StatusInternalServerError, status, err.Error()))
 		return err
 	}
@@ -58,9 +63,14 @@ func (h *Handlers) Login(c echo.Context) error {
 		return err // The error response is already handled in the helper function
 	}
 
+	// validate username and password values
+	if user.Username == "" || user.Password == "" || user.Email == "" {
+		c.JSON(http.StatusBadRequest, models.NewResponseError(http.StatusBadRequest, status.UserErrCode_RequestUsernamePassword, ""))
+		return nil
+	}
 	// Call core.Login to log the user in and get the token
 	ctx := c.Request().Context()
-	status, token, err := h.core.Login(ctx, &user)
+	status, token, err := h.Core.Login(ctx, &user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.NewResponseError(http.StatusInternalServerError, status, err.Error()))
 		return err

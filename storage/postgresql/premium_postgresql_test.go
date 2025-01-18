@@ -18,9 +18,7 @@ func TestStorage_PremiumPackage(t *testing.T) {
 	ctx := context.Background()
 
 	// Step 1: Create a valid user
-	userID := uuid.New()
 	user := &models.User{
-		ID:        userID,
 		Username:  "testuser",
 		Email:     "testuser@example.com",
 		Password:  "password123", // Assuming the password is required
@@ -28,7 +26,7 @@ func TestStorage_PremiumPackage(t *testing.T) {
 	}
 
 	// Insert the user into the database (you need to have a CreateUser method in your storage)
-	_, err := s.CreateUser(ctx, user) // Replace this with actual method to insert a user
+	userID, err := s.CreateUser(ctx, user) // Replace this with actual method to insert a user
 	if err != nil {
 		t.Fatalf("Failed to create user: %v", err)
 	}
@@ -37,7 +35,7 @@ func TestStorage_PremiumPackage(t *testing.T) {
 	premiumPackageID := uuid.New()
 	testData := &models.PremiumPackage{
 		ID:          premiumPackageID,
-		UserID:      &userID,                             // Use the valid userID from the user created above
+		UserID:      userID,                              // Use the valid userID from the user created above
 		PackageType: models.VerifiedLabel,                // Example package type
 		ActiveUntil: time.Now().Add(30 * 24 * time.Hour), // Active for 30 days
 		CreatedAt:   time.Now(),

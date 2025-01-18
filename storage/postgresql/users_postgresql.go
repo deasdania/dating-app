@@ -14,7 +14,6 @@ const (
 	// User Queries
 	createUserQuery = `
 		INSERT INTO users (
-			id,
 			username,
 			password,
 			email,
@@ -22,7 +21,6 @@ const (
 			is_premium,
 			verified
 		) VALUES (
-			:id,
 			:username,
 			:password,
 			:email,

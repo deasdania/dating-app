@@ -18,9 +18,7 @@ func TestStorage_Swipe(t *testing.T) {
 	ctx := context.Background()
 
 	// Prepare test data user
-	userID := uuid.New()
 	testDataUser := &models.User{
-		ID:        userID,
 		Username:  "testuser",
 		Password:  "securepassword",
 		Email:     "testuser@example.com",
@@ -30,17 +28,15 @@ func TestStorage_Swipe(t *testing.T) {
 	}
 
 	// Create a new user
-	_, err := s.CreateUser(ctx, testDataUser)
+	userID, err := s.CreateUser(ctx, testDataUser)
 	if err != nil {
 		t.Errorf("Storage.CreateUser() error = %v", err)
 		return
 	}
 
 	// Prepare test data profile
-	profileID := uuid.New()
 	testDataProfile := &models.Profile{
-		ID:          profileID,
-		UserID:      testDataUser.ID,
+		UserID:      *userID,
 		Username:    "testprofile",
 		Description: "This is a test profile",
 		ImageURL:    "https://example.com/image.jpg",
@@ -48,7 +44,7 @@ func TestStorage_Swipe(t *testing.T) {
 		UpdatedAt:   time.Now(),
 	}
 	// Create a new profile
-	_, err = s.CreateProfile(ctx, testDataProfile)
+	profileID, err := s.CreateProfile(ctx, testDataProfile)
 	if err != nil {
 		t.Errorf("Storage.CreateProfile() error = %v", err)
 		return
@@ -57,8 +53,8 @@ func TestStorage_Swipe(t *testing.T) {
 	swipeID := uuid.New()
 	testDataSwipe := &models.Swipe{
 		ID:        swipeID,
-		UserID:    &userID,
-		ProfileID: &profileID,
+		UserID:    userID,
+		ProfileID: profileID,
 		Direction: "like",
 		CreatedAt: time.Now(),
 	}

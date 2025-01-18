@@ -13,7 +13,7 @@ func (h *Handlers) UpdatePremiumStatus(c echo.Context) error {
 	// Extract user ID from token (optional in this case, but you can validate it)
 	uid, err := h.ExtractUserIDFromToken(c)
 	if err != nil {
-		h.log.Errorf("Failed to extract user ID from token: %v", err) // Log the error
+		h.Log.Errorf("Failed to extract user ID from token: %v", err) // Log the error
 		return h.RespondWithError(c, http.StatusUnauthorized, status.UserErrCode_Unauthorized, err.Error())
 	}
 
@@ -29,9 +29,9 @@ func (h *Handlers) UpdatePremiumStatus(c echo.Context) error {
 	}
 
 	ctx := c.Request().Context()
-	statusCode, err := h.core.SetPremium(ctx, uid, packageT)
+	statusCode, err := h.Core.SetPremium(ctx, uid, packageT)
 	if err != nil {
-		h.log.Errorf("Error set premium type %s for user %s: %v", ts, uid, err)
+		h.Log.Errorf("Error set premium type %s for user %s: %v", ts, uid, err)
 		return h.RespondWithError(c, http.StatusInternalServerError, statusCode, err.Error())
 	}
 

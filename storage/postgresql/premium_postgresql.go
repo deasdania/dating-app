@@ -14,14 +14,12 @@ const (
 	// Premium Package Queries
 	createPremiumPackageQuery = `
 		INSERT INTO premium_packages (
-			id,
 			user_id,
 			package_type,
 			active_until,
 			created_at,
 			updated_at
 		) VALUES (
-			:id,
 			:user_id,
 			:package_type,
 			:active_until,
